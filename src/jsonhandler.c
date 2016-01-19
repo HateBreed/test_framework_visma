@@ -1,7 +1,7 @@
 #include "jsonhandler.h"
 #include "utils.h"
 
-static GHashTable* userlist = NULL;
+GHashTable* userlist = NULL;
 
 gboolean add_user(user_preference* preference) {
 	if(!userlist) userlist = g_hash_table_new_full(
@@ -78,12 +78,14 @@ testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* p
 	return tfile;
 }
 
-gboolean load_preferences(gchar* username,guchar* password) {
+gboolean load_preferences(gchar* username,gchar* password) {
 	if(!username || !password) return FALSE;
 	
 	GError *error = NULL;
 	
 	user_preference* preferences = preference_initialize(username);
+	
+	add_user(preferences);
 	
 	gchar* prefpath = preference_make_path(preferences);
 	
@@ -117,6 +119,8 @@ gboolean read_preferences(user_preference* preferences) {
 			testcase* test = testcase_initialize(
 				get_json_member_string(reader,"URL"),
 				get_json_member_string(reader,"testname"));
+				
+			preference_add_test(preferences,test);
 				
 			g_print("Test \"%s\" URL = %s\n",test->name,test->URL);
 			
@@ -171,8 +175,10 @@ gboolean read_preferences(user_preference* preferences) {
 	return rval;
 }
 
-void destroy() {
+void destroy_preferences() {
 	if(userlist) g_hash_table_destroy(userlist);
+	else g_print("list empty\n");
+	userlist = NULL;
 }
 
 void free_all_preferences(gpointer data) {
@@ -236,7 +242,7 @@ void free_key(gpointer data) {
 
 gchar* preference_make_path(user_preference* preference) {
 	const gchar separator = G_DIR_SEPARATOR;
-	gchar* path = g_strjoin(&separator,TASKPATH,preference->username,PREFERENCEFILE,NULL);
-	g_print("Path is \"%s\"",path);
+	gchar* path = g_strjoin("/",TASKPATH,preference->username,PREFERENCEFILE,NULL);
+	g_print("Path is \"%s\"\n",path);
 	return path;
 }

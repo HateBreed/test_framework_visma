@@ -1,7 +1,7 @@
 #ifndef __JSON_HANLDER_H_
 #define __JSON_HANDLER_H_
 
-#define TASKPATH "tasks"
+#define TASKPATH "tests"
 #define PREFERENCEFILE "preferences.json"
 
 #include <glib.h>
@@ -28,10 +28,10 @@ typedef struct testfile_t {
 	gchar *method;
 } testfile;
 
-gboolean load_preferences(gchar* username,guchar* password);
+gboolean load_preferences(gchar* username,gchar* password);
 gboolean read_preferences(user_preference* preferences);
 
-void destroy();
+void destroy_preferences();
 void free_all_preferences(gpointer data);
 gboolean free_preferences(gchar* username);
 void free_testcase(gpointer testcase);
