@@ -5,8 +5,8 @@ static GHashTable* userlist = NULL;
 
 gboolean add_user(user_preference* preference) {
 	if(!userlist) userlist = g_hash_table_new_full(
-		NULL,
-		NULL, 
+		(GHashFunc)g_str_hash,
+		(GEqualFunc)g_str_equal,
 		(GDestroyNotify)free_key, 
 		(GDestroyNotify)free_all_preferences);
 		
@@ -48,8 +48,8 @@ testcase* testcase_initialize(const gchar* URL, const gchar* name) {
 	test->URL = g_strdup(URL);
 	test->name = g_strdup(name);
 	test->files = g_hash_table_new_full(
-		NULL,
-		NULL,
+		(GHashFunc)g_str_hash,
+		(GEqualFunc)g_str_equal,
 		(GDestroyNotify)free_key,
 		(GDestroyNotify)free_testfile);
 		

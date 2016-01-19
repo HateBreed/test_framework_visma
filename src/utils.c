@@ -9,5 +9,6 @@ gboolean string_is_integer(const gchar* string) {
 }
 
 void free_key(gpointer data) {
-	g_free(data);
+	gchar* str = (gchar*)data;
+	g_free(str);
 }

@@ -10,8 +10,16 @@ gboolean strcheck(gconstpointer a, gconstpointer b) {
 	return FALSE;
 }
 
+void print_hashtable_strings(gpointer key, gpointer value, gpointer userdata) {
+	g_print("\"%s\":\"%s\"\n",(gchar*)key, (gchar*)value);
+}
+
 void tests_initialize() {
-	if(!required_fields) required_fields = g_hash_table_new_full(NULL,(GEqualFunc)strcheck, (GDestroyNotify)free_key,(GDestroyNotify)free_key);
+	if(!required_fields) required_fields = g_hash_table_new_full(
+		(GHashFunc)g_str_hash,
+		(GEqualFunc)g_str_equal,
+		NULL,
+		NULL);
 }
 
 void tests_destroy() {
@@ -27,6 +35,7 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 
 	g_hash_table_foreach(test->files, (GHFunc)tests_check_fields_from_testfiles, testpath);
 	g_print("%d required fields\n",g_hash_table_size(required_fields));
+	g_hash_table_foreach(required_fields,(GHFunc)print_hashtable_strings,NULL);
 	g_free(testpath);
 	
 	return TRUE;
@@ -62,8 +71,10 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 		
 		if(g_strcmp0(membstring,"{parent}") == 0) {
 			if(!required_fields) tests_initialize();
-			if(g_hash_table_insert(required_fields,g_strdup(members[membidx]),"req"))
-				g_print("Added %s as required field.\n",members[membidx]);
+			if(g_hash_table_insert(required_fields,g_strdup(members[membidx]),""))
+				g_print("Added %s as required field (size %d).\n",
+					members[membidx],
+					g_hash_table_size(required_fields));
 			else g_print("%s was already a required field.\n",members[membidx]);
 		}
 	}
@@ -71,6 +82,7 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 	g_print("\n");	
 	g_strfreev(members);
 	g_object_unref(parser);
+	parser = NULL;
 	g_free(filepath);
 }
 
