@@ -1,4 +1,5 @@
 #include "tests.h"
+#include "connectionutils.h"
 
 static GHashTable *required_fields = NULL;
 static GSList *test_sequence = NULL;
@@ -7,13 +8,20 @@ testitem* testitem_initialize() {
 	return g_new(struct testitem_t,1);
 }
 
+void testitem_destroy(gpointer data) {
+	testitem* item = (testitem*)data;
+	g_free(item->id);
+	g_free(item->data);
+	g_free(item);
+}
+
 void print_hashtable_strings(gpointer key, gpointer value, gpointer userdata) {
 	g_print("\"%s\":\"%s\"\n",(gchar*)key, (gchar*)value);
 }
 
 gboolean find_from_hash_table(gpointer key, gpointer value, gpointer user_data) {
 	if(!key || !user_data) return FALSE;
-	return g_strcmp0((gchar*)key,(gchar*)user_data);
+	return g_strcmp0((gchar*)key,(gchar*)user_data) == 0 ? TRUE : FALSE;
 }
 
 void tests_initialize() {
@@ -29,16 +37,21 @@ void tests_destroy() {
 		g_hash_table_destroy(required_fields);
 		g_hash_table_unref(required_fields);
 	}
+	g_slist_free_full(test_sequence,(GDestroyNotify)testitem_destroy);
 }
 
 gboolean tests_run_test(gchar* username, testcase* test) {
 
 	gchar* testpath = tests_make_path_for_test(username,test);
 
+	// Check which fields from the case creation reply have to be stored for future use
 	g_hash_table_foreach(test->files, (GHFunc)tests_check_fields_from_testfiles, testpath);
-	g_print("%d required fields\n",g_hash_table_size(required_fields));
+	// Print the fields
 	g_hash_table_foreach(required_fields,(GHFunc)print_hashtable_strings,NULL);
+	
+	// Create the sequence of sending tests (json files as charstring data)
 	build_test_sequence(testpath,test);
+	
 	g_free(testpath);
 	
 	return TRUE;
@@ -57,8 +70,6 @@ void build_test_sequence(gchar* testpath, testcase* test) {
 		testfile* tfile = (testfile*)g_hash_table_find(test->files,
 			(GHRFunc)find_from_hash_table, 
 			searchparam);
-			
-		g_free(searchparam);
 		
 		// Create path for the file to be read
 		gchar* filepath = g_strjoin("/",testpath,tfile->file,NULL);
@@ -75,11 +86,19 @@ void build_test_sequence(gchar* testpath, testcase* test) {
 		item->data = json_generator_to_data(generator,&(item->length));
 		item->id = g_strdup(tfile->id);
 		
+		g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
 		// First is login, it is always first in the list
-		if(testidx == 0) test_sequence = g_slist_prepend(test_sequence,item);
-		// Rest are added in order after login
+		if(testidx == 0) {
+			//g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
+			test_sequence = g_slist_prepend(test_sequence,item);
+			gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
+			http_post(url,item->data,item->length);
+			g_free(url);
+		}
+		// Rest are added in order after login credentials
 		else test_sequence = g_slist_append(test_sequence,item);
 	
+		g_free(searchparam);
 		g_object_unref(generator);
 		g_object_unref(parser);
 	}
@@ -114,7 +133,7 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 			else g_print("%s was already a required field.\n",members[membidx]);
 		}
 		if(g_strcmp0(membstring,"{getinfo}") == 0) {
-			// 
+			// TODO react to this
 		}
 	}
 	

@@ -75,7 +75,7 @@ testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* p
 	tfile->path = g_strdup(path);
 	tfile->file = g_strdup(file);
 	tfile->method = g_strdup(method);
-	g_print("Added id :%s, file:%s, path:%s, method:%s ",tfile->id,tfile->file,tfile->path,tfile->method);
+	//g_print("Added id :%s, file:%s, path:%s, method:%s ",tfile->id,tfile->file,tfile->path,tfile->method);
 	return tfile;
 }
 
@@ -117,12 +117,12 @@ gboolean read_preferences(user_preference* preferences) {
 				
 			preference_add_test(preferences,test);
 				
-			g_print("Test \"%s\" URL = %s\n",test->name,test->URL);
+			//g_print("Test \"%s\" URL = %s\n",test->name,test->URL);
 			
 			json_reader_read_member(reader,"files");
 			
 			if(json_reader_is_array(reader)) {
-				g_print("%d files:\n",json_reader_count_elements(reader));
+				//g_print("%d files:\n",json_reader_count_elements(reader));
 				for(gint fileidx = 0; fileidx < json_reader_count_elements(reader); fileidx++) {
 					json_reader_read_element(reader,fileidx);
 					
@@ -135,10 +135,8 @@ gboolean read_preferences(user_preference* preferences) {
 					
 						//g_print("\tid :%s, file:%s, path:%s, method:%s ",id,file,path,method);
 						testfile* tfile = testfile_initialize(id,file,path,method);
-						if(testcase_add_file(test,tfile)) g_print("as new testfile to test %s\n",
-							test->name);
-						else g_print("replaced old data in test %s\n",
-							test->name);
+						if(!testcase_add_file(test,tfile)) 
+							g_print("replaced old data in test %s\n", test->name);
 					}
 					json_reader_end_element(reader);
 				}

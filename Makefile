@@ -2,7 +2,7 @@ PREFIX=src
 SOURCES=$(PREFIX)/main.c $(PREFIX)/utils.c $(PREFIX)/jsonutils.c $(PREFIX)/jsonhandler.c $(PREFIX)/connectionutils.c $(PREFIX)/tests.c
 COMPILER=gcc
 COPTS=-Wall --std=gnu99 -g
-LIBS=`pkg-config --cflags --libs glib-2.0 json-glib-1.0`
+LIBS=`pkg-config --cflags --libs glib-2.0 json-glib-1.0` -lcurl
 BINARY=main
 
 compile:
