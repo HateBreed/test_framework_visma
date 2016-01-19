@@ -7,7 +7,8 @@
 #include "utils.h"
 #include "jsonutils.h"
 #include "jsonhandler.h"
-
+#include "connectionutils.h"
+#include "tests.h"
 
 gchar testpath[] = "tests/";
 
