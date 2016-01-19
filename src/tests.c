@@ -66,7 +66,7 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 	
 	g_print("File: %s\n",filepath);
 	for(gint membidx = 0; members[membidx] != NULL; membidx++) {
-		g_print("%s\n",members[membidx]);
+		//g_print("%s\n",members[membidx]);
 		gchar* membstring = get_json_member_string(reader,members[membidx]);
 		
 		if(g_strcmp0(membstring,"{parent}") == 0) {
