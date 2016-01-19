@@ -3,6 +3,6 @@
 
 #include <curl/curl.h>
 
-gint http_post(gchar* url, gchar* data, gsize length);
+gint http_post(gchar* url, gchar* data, gsize length, gchar* method);
 
 #endif

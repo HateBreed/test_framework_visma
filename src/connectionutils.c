@@ -1,7 +1,7 @@
 #include <glib.h>
 #include "connectionutils.h"
 
-gint http_post(gchar* url, gchar* data, gsize length) {
+gint http_post(gchar* url, gchar* data, gsize length, gchar* method) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -21,7 +21,7 @@ gint http_post(gchar* url, gchar* data, gsize length) {
    		g_print("%s\n",clength);
    		g_free(clength);
    		
-   		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+   		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
    		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
  
