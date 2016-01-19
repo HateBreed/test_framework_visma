@@ -1,0 +1,16 @@
+{
+        "task_guid": "{parent}",
+        "quantity": "1",
+	"unit_price": "100",
+	"unit_cost": "100",
+	"measurement_unit": "km",
+        "travel_start_time": "18.1.2016",
+	"travel_end_time": "24.1.2016",
+	"product_guid": 
+	{
+		"path": "Products",
+		"method": "GET",
+		"search_suffix": "products?type=Mileage"
+	}
+}
+
