@@ -7,3 +7,7 @@ gboolean string_is_integer(const gchar* string) {
 	}
 	return TRUE;
 }
+
+void free_key(gpointer data) {
+	g_free(data);
+}

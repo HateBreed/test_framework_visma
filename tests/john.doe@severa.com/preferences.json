@@ -7,7 +7,7 @@
 		[
 			{
 				"id": "login",
-				"file": "Singin.json",
+				"file": "Signin.json",
 				"path": "SignIn",
 				"method": "POST"
 			},

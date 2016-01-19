@@ -75,6 +75,7 @@ testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* p
 	tfile->path = g_strdup(path);
 	tfile->file = g_strdup(file);
 	tfile->method = g_strdup(method);
+	g_print("Added id :%s, file:%s, path:%s, method:%s ",tfile->id,tfile->file,tfile->path,tfile->method);
 	return tfile;
 }
 
@@ -139,9 +140,9 @@ gboolean read_preferences(user_preference* preferences) {
 					
 					if(g_strcmp0(id,"login") == 0 || string_is_integer(id)) {
 					
-						g_print("\tid :%s, file:%s, path:%s, method:%s ",id,file,path,method);
+						//g_print("\tid :%s, file:%s, path:%s, method:%s ",id,file,path,method);
 						testfile* tfile = testfile_initialize(id,file,path,method);
-						if(testcase_add_file(test,tfile)) g_print("added as new testfile to test %s\n",
+						if(testcase_add_file(test,tfile)) g_print("as new testfile to test %s\n",
 							test->name);
 						else g_print("replaced old data in test %s\n",
 							test->name);
@@ -177,7 +178,10 @@ gboolean read_preferences(user_preference* preferences) {
 }
 
 void destroy_preferences() {
-	if(userlist) g_hash_table_destroy(userlist);
+	if(userlist) {
+		g_hash_table_destroy(userlist);
+		g_hash_table_unref(userlist);
+	}
 	else g_print("list empty\n");
 	userlist = NULL;
 }
@@ -241,12 +245,9 @@ void free_testfile(gpointer data) {
 	g_free(file);
 }
 
-void free_key(gpointer data) {
-	g_free(data);
-}
 
 gchar* preference_make_path(user_preference* preference) {
-	const gchar separator = G_DIR_SEPARATOR;
+	//const gchar separator = G_DIR_SEPARATOR;
 	gchar* path = g_strjoin("/",TASKPATH,preference->username,PREFERENCEFILE,NULL);
 	g_print("Path is \"%s\"\n",path);
 	return path;

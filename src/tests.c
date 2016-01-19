@@ -1,5 +1,83 @@
 #include "tests.h"
 
+static GHashTable* required_fields = NULL;
+
+gboolean strcheck(gconstpointer a, gconstpointer b) {
+	const gchar *stra = (gchar*)a;
+	const gchar *strb = (gchar*)b;
+	
+	if(g_strcmp0(stra,strb) == 0) return TRUE;
+	return FALSE;
+}
+
+void tests_initialize() {
+	if(!required_fields) required_fields = g_hash_table_new_full(NULL,(GEqualFunc)strcheck, (GDestroyNotify)free_key,(GDestroyNotify)free_key);
+}
+
+void tests_destroy() {
+	if(!required_fields) {
+		g_hash_table_destroy(required_fields);
+		g_hash_table_unref(required_fields);
+	}
+}
+
+gboolean tests_run_test(gchar* username, testcase* test) {
+
+	gchar* testpath = tests_make_path_for_test(username,test);
+
+	g_hash_table_foreach(test->files, (GHFunc)tests_check_fields_from_testfiles, testpath);
+	g_print("%d required fields\n",g_hash_table_size(test->files));
+	g_free(testpath);
+	
+	return TRUE;
+}
+
+void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer testpath) {
+
+	GError *error = NULL;
+	JsonParser *parser = NULL;
+	
+	testfile* tfile = (testfile*)value;
+	gchar* filepath = g_strjoin("/",testpath,tfile->file,NULL);
+	g_print("%s id :%s, file:%s, path:%s, method:%s \n",(gchar*)key,tfile->id,tfile->file,tfile->path,tfile->method);
+		
+	parser = json_parser_new();
+	json_parser_load_from_file(parser, filepath, &error);
+		
+	if (error) {
+		g_print ("Cannot parse file \"%s\". Reason: %s\n", filepath, error->message);
+		g_error_free(error);
+		g_object_unref(parser);
+		//return;
+	}
+		
+	JsonReader *reader = json_reader_new (json_parser_get_root (parser));
+	
+	gchar** members = json_reader_list_members(reader);
+	
+	g_print("File: %s\n",filepath);
+	for(gint membidx = 0; members[membidx] != NULL; membidx++) {
+		g_print("%s\n",members[membidx]);
+		gchar* membstring = get_json_member_string(reader,members[membidx]);
+		if(g_strcmp0(membstring,"{parent}") == 0) {
+			if(!required_fields) tests_initialize();
+			if(g_hash_table_insert(required_fields,g_strdup(members[membidx]),"req"))
+				g_print("Added %s as required field.\n",members[membidx]);
+			else g_print("%s was already a required field.\n",members[membidx]);
+		}
+	}
+	
+	g_print("\n");	
+	g_strfreev(members);
+	g_object_unref(parser);
+	g_free(filepath);
+}
+
+
+gchar* tests_make_path_for_test(gchar* username, testcase* test) {
+	gchar* filepath = g_strjoin("/",TASKPATH,username,test->name,NULL);
+	return filepath;
+}
 /*
 	Select given test from user_preferences
 	Create new parser and load each file separately

@@ -8,7 +8,7 @@
 #include <glib.h>
 
 gboolean string_is_integer(const gchar* string);
-
+void free_key(gpointer data);
 
 #endif
 

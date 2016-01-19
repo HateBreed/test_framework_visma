@@ -1,5 +1,5 @@
 {
-	"case_guid": "424242deadbeef",
+	"case_guid": "{parent}",
 	"case_name": "TestCase_JL_424242deadbeef",
 	"hours": "3",
 	"worktype_guid": "bf1f7681951002c741fbf069740e7e4d",

@@ -1,5 +1,5 @@
 {
-        "case_guid": "{parent}",
+	"case_guid": "{parent}",
 	"quantity": "2",
 	"measurement_unit": "€",
 	"unit_cost": "50",
