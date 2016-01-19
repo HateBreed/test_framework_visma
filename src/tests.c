@@ -26,7 +26,7 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 	gchar* testpath = tests_make_path_for_test(username,test);
 
 	g_hash_table_foreach(test->files, (GHFunc)tests_check_fields_from_testfiles, testpath);
-	g_print("%d required fields\n",g_hash_table_size(test->files));
+	g_print("%d required fields\n",g_hash_table_size(required_fields));
 	g_free(testpath);
 	
 	return TRUE;
@@ -59,6 +59,7 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 	for(gint membidx = 0; members[membidx] != NULL; membidx++) {
 		g_print("%s\n",members[membidx]);
 		gchar* membstring = get_json_member_string(reader,members[membidx]);
+		
 		if(g_strcmp0(membstring,"{parent}") == 0) {
 			if(!required_fields) tests_initialize();
 			if(g_hash_table_insert(required_fields,g_strdup(members[membidx]),"req"))
