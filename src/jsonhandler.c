@@ -59,8 +59,8 @@ testcase* testcase_initialize(const gchar* URL, const gchar* name) {
 gboolean testcase_add_file(testcase* test, testfile* file) {
 	if(!test || !file) return FALSE;
 	if(!test->files) test->files = g_hash_table_new_full(
-		NULL,
-		NULL,
+		(GHashFunc)g_str_hash,
+		(GEqualFunc)g_str_equal,
 		(GDestroyNotify)free_key,
 		(GDestroyNotify)free_testfile);
 		
@@ -152,17 +152,6 @@ gboolean read_preferences(user_preference* preferences) {
 	
 	json_reader_end_member(reader);
 
-	
-	/*
-		Read preferences for given user
-		For each test in array, new struct in list
-			For each file in test do a hashmap with id
-				Conduct each test by uploading json
-					If json has {parent} markings, use values from id 0 (case creation
-					file, response must be saved (load from data)
-					 - if none found, abort
-				Verify from result that values in json are ok
-	*/
 	g_object_unref(reader);
 	
 	return rval;

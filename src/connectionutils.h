@@ -3,6 +3,11 @@
 
 #include <curl/curl.h>
 
-gint http_post(gchar* url, gchar* data, gsize length, gchar* method);
+typedef struct jsonreply_t {
+  	gchar *data;
+  	gsize length;
+} jsonreply;
+
+jsonreply* http_post(gchar* url, gchar* data, gsize length, gchar* method);
 
 #endif

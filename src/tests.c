@@ -92,7 +92,8 @@ void build_test_sequence(gchar* testpath, testcase* test) {
 			//g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
 			test_sequence = g_slist_prepend(test_sequence,item);
 			gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
-			http_post(url,item->data,item->length,tfile->method);
+			jsonreply* reply = http_post(url,item->data,item->length,tfile->method);
+			g_print("%s\n",reply->data);
 			g_free(url);
 		}
 		// Rest are added in order after login credentials
