@@ -1,17 +1,19 @@
 #include "tests.h"
 
-static GHashTable* required_fields = NULL;
+static GHashTable *required_fields = NULL;
+static GSList *test_sequence = NULL;
 
-gboolean strcheck(gconstpointer a, gconstpointer b) {
-	const gchar *stra = (gchar*)a;
-	const gchar *strb = (gchar*)b;
-	
-	if(g_strcmp0(stra,strb) == 0) return TRUE;
-	return FALSE;
+testitem* testitem_initialize() {
+	return g_new(struct testitem_t,1);
 }
 
 void print_hashtable_strings(gpointer key, gpointer value, gpointer userdata) {
 	g_print("\"%s\":\"%s\"\n",(gchar*)key, (gchar*)value);
+}
+
+gboolean find_from_hash_table(gpointer key, gpointer value, gpointer user_data) {
+	if(!key || !user_data) return FALSE;
+	return g_strcmp0((gchar*)key,(gchar*)user_data);
 }
 
 void tests_initialize() {
@@ -36,38 +38,72 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 	g_hash_table_foreach(test->files, (GHFunc)tests_check_fields_from_testfiles, testpath);
 	g_print("%d required fields\n",g_hash_table_size(required_fields));
 	g_hash_table_foreach(required_fields,(GHFunc)print_hashtable_strings,NULL);
+	build_test_sequence(testpath,test);
 	g_free(testpath);
 	
 	return TRUE;
 }
 
+void build_test_sequence(gchar* testpath, testcase* test) {
+	
+	// First file with login
+	for(gint testidx = 0; testidx < g_hash_table_size(test->files); testidx++) {
+		JsonParser *parser = json_parser_new();
+		
+		// First the login information need to be added, then tasks in number order
+		gchar* searchparam = (testidx == 0 ? g_strdup("login") : g_strdup_printf("%d",testidx-1));
+		
+		// Get the data with the searchparameter from hash table
+		testfile* tfile = (testfile*)g_hash_table_find(test->files,
+			(GHRFunc)find_from_hash_table, 
+			searchparam);
+			
+		g_free(searchparam);
+		
+		// Create path for the file to be read
+		gchar* filepath = g_strjoin("/",testpath,tfile->file,NULL);
+		
+		// Read json detailed by this data (stucture)
+		if(!load_json_from_file(parser, filepath)) return;
+	
+		// Establish a generator to get the character representation
+		JsonGenerator *generator = json_generator_new();
+		json_generator_set_root(generator, json_parser_get_root(parser));
+	
+		// Create new test item and set it to contain json as string data
+		testitem *item = testitem_initialize();
+		item->data = json_generator_to_data(generator,&(item->length));
+		item->id = g_strdup(tfile->id);
+		
+		// First is login, it is always first in the list
+		if(testidx == 0) test_sequence = g_slist_prepend(test_sequence,item);
+		// Rest are added in order after login
+		else test_sequence = g_slist_append(test_sequence,item);
+	
+		g_object_unref(generator);
+		g_object_unref(parser);
+	}
+}
+
 void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer testpath) {
 
-	GError *error = NULL;
-	JsonParser *parser = NULL;
+	JsonParser *parser = json_parser_new();
 	
+	// Cast the input value to testfile and create path based on filename
 	testfile* tfile = (testfile*)value;
 	gchar* filepath = g_strjoin("/",testpath,tfile->file,NULL);
-	g_print("%s id :%s, file:%s, path:%s, method:%s \n",(gchar*)key,tfile->id,tfile->file,tfile->path,tfile->method);
-		
-	parser = json_parser_new();
-	json_parser_load_from_file(parser, filepath, &error);
-		
-	if (error) {
-		g_print ("Cannot parse file \"%s\". Reason: %s\n", filepath, error->message);
-		g_error_free(error);
-		g_object_unref(parser);
-		//return;
-	}
+	
+	// Load json with this filename
+	if(!load_json_from_file(parser, filepath)) return;
 		
 	JsonReader *reader = json_reader_new (json_parser_get_root (parser));
-	
+
 	gchar** members = json_reader_list_members(reader);
 	
-	g_print("File: %s\n",filepath);
+	//g_print("File: %s\n",filepath);
 	for(gint membidx = 0; members[membidx] != NULL; membidx++) {
 		//g_print("%s\n",members[membidx]);
-		gchar* membstring = get_json_member_string(reader,members[membidx]);
+		const gchar* membstring = get_json_member_string(reader,members[membidx]);
 		
 		if(g_strcmp0(membstring,"{parent}") == 0) {
 			if(!required_fields) tests_initialize();
@@ -77,10 +113,14 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 					g_hash_table_size(required_fields));
 			else g_print("%s was already a required field.\n",members[membidx]);
 		}
+		if(g_strcmp0(membstring,"{getinfo}") == 0) {
+			// 
+		}
 	}
 	
-	g_print("\n");	
+	//g_print("\n");	
 	g_strfreev(members);
+	g_object_unref(reader);
 	g_object_unref(parser);
 	parser = NULL;
 	g_free(filepath);

@@ -82,24 +82,17 @@ testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* p
 user_preference* load_preferences(gchar* username,gchar* password) {
 	if(!username || !password) return NULL;
 	
-	GError *error = NULL;
-	
 	user_preference* preferences = preference_initialize(username);
 	
 	add_user(preferences);
 	
 	gchar* prefpath = preference_make_path(preferences);
 	
-	json_parser_load_from_file(preferences->parser,prefpath,&error);
-	
-	g_free(prefpath);
-
-	if (error) {
-		g_print ("Cannot parse preferences for user \"%s\". Reason: %s\n", username, error->message);
-		g_error_free(error);
-		g_object_unref(preferences->parser);
+	if(!load_json_from_file(preferences->parser,prefpath)) {
+		g_print ("Cannot parse preferences for user \"%s\"\n", username);
 		return NULL;
 	}
+	g_free(prefpath);
 	
 	if(read_preferences(preferences)) return preferences;
 	else return NULL;
