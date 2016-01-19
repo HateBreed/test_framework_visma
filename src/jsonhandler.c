@@ -1,7 +1,7 @@
 #include "jsonhandler.h"
 #include "utils.h"
 
-GHashTable* userlist = NULL;
+static GHashTable* userlist = NULL;
 
 gboolean add_user(user_preference* preference) {
 	if(!userlist) userlist = g_hash_table_new_full(
@@ -78,8 +78,8 @@ testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* p
 	return tfile;
 }
 
-gboolean load_preferences(gchar* username,gchar* password) {
-	if(!username || !password) return FALSE;
+user_preference* load_preferences(gchar* username,gchar* password) {
+	if(!username || !password) return NULL;
 	
 	GError *error = NULL;
 	
@@ -97,10 +97,11 @@ gboolean load_preferences(gchar* username,gchar* password) {
 		g_print ("Cannot parse preferences for user \"%s\". Reason: %s\n", username, error->message);
 		g_error_free(error);
 		g_object_unref(preferences->parser);
-		return FALSE;
+		return NULL;
 	}
 	
-	return read_preferences(preferences);
+	if(read_preferences(preferences)) return preferences;
+	else return NULL;
 }
 
 gboolean read_preferences(user_preference* preferences) {
@@ -192,6 +193,7 @@ void free_all_preferences(gpointer data) {
 	g_sequence_free(user_pref->tests);
 		
 	g_print("done\n");
+	g_free(user_pref);
 }
 
 gboolean free_preferences(gchar* username) {
@@ -210,6 +212,7 @@ gboolean free_preferences(gchar* username) {
 		g_sequence_free(user_pref->tests);
 		
 		g_print("done\n");
+		g_free(user_pref);
 		return TRUE;
 	}
 	else g_print("User \"%s\" was not found\n",username);
@@ -226,6 +229,7 @@ void free_testcase(gpointer data) {
 		g_hash_table_destroy(test->files);
 		test->files = NULL;
 	}
+	g_free(test);
 }
 
 void free_testfile(gpointer data) {
@@ -234,6 +238,7 @@ void free_testfile(gpointer data) {
 	g_free(file->file);
 	g_free(file->path);
 	g_free(file->method);
+	g_free(file);
 }
 
 void free_key(gpointer data) {

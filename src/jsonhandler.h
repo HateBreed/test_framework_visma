@@ -28,7 +28,7 @@ typedef struct testfile_t {
 	gchar *method;
 } testfile;
 
-gboolean load_preferences(gchar* username,gchar* password);
+user_preference* load_preferences(gchar* username,gchar* password);
 gboolean read_preferences(user_preference* preferences);
 
 void destroy_preferences();
