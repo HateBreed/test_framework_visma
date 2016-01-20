@@ -1,7 +1,7 @@
 {
-	"case_guid": "{parent}",
-	"case_name": "TestCase_JL_424242deadbeef",
+	"task_guid": "{parent}",
 	"hours": "3",
-	"worktype_guid": "bf1f7681951002c741fbf069740e7e4d",
-	"worktype_name": "project_management"
+	"worktype_guid": "{parent}",
+	"worktype_name": "project_management",
+	"date": "2016-01-20"
 }

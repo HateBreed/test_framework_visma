@@ -47,6 +47,7 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 	CURLcode res;
 	struct curl_slist *headers = NULL;
 	
+	
 	jsonreply* reply = g_new0(struct jsonreply_t,1);
 	
 	g_print("Content (%ld):%s \n%s To: %s\n", jsondata->length, jsondata->data,method, url);
@@ -75,7 +76,6 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 		if(res != CURLE_OK)	
 			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 			
-		
 		curl_slist_free_all(headers);
 	}
 	g_print("Reply (%ld):%s \n\n", reply->length, reply->data);

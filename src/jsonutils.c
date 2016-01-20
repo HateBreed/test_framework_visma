@@ -44,7 +44,7 @@ gboolean load_json_from_data(JsonParser* parser, gchar* data, gssize length) {
 	return TRUE;
 }
 
-gchar* get_value_of_member(jsonreply* jsondata, gchar* search, gchar* mainmember ) {
+gchar* get_value_of_member(jsonreply* jsondata, gchar* search, gchar* search2) {
 	if(!jsondata || !search) return NULL;
 	
 	gchar* value = NULL;
@@ -54,28 +54,34 @@ gchar* get_value_of_member(jsonreply* jsondata, gchar* search, gchar* mainmember
 	if(load_json_from_data(parser,jsondata->data,jsondata->length)) {
 		JsonReader *reader = json_reader_new (json_parser_get_root (parser));
 		
-		if(mainmember) {
-			// Replies contain either data or error, only data is checked now
-			if(json_reader_read_member(reader,mainmember)) {
+		// Replies contain either data or error, only data is checked now
+		if(json_reader_read_member(reader,"data")) {
 		
-				// If within an array
-				if(json_reader_is_array(reader)) {
-					for(gint idx = 0; idx < json_reader_count_elements(reader); idx++) {
-						json_reader_read_element(reader,idx);
-						value = get_json_member_string(reader,search);
-						json_reader_end_element(reader);
-						if(value) break;
+			// If within an array
+			if(json_reader_is_array(reader)) {
+				for(gint idx = 0; idx < json_reader_count_elements(reader); idx++) {
+					json_reader_read_element(reader,idx);
+					value = get_json_member_string(reader,search);
+					json_reader_end_element(reader);
+					if(value) break;
+				}
+			}
+			// Plain json object
+			else if(json_reader_is_object(reader)) {
+				gboolean success = FALSE;
+				if(search2) {
+					g_print("search: %s search2: %s\n",search,search2);
+					if(json_reader_read_member(reader,search2)) {
+						success = TRUE;
 					}
 				}
-				// Plain json object
-				else if(json_reader_is_object(reader)) {
-					value = get_json_member_string(reader,search); 
-				}
-				// TODO check if is on other type
+				value = get_json_member_string(reader,search);
+				if(success) json_reader_end_member(reader);
 			}
-			json_reader_end_member(reader);
+			// TODO check if is on other type
 		}
-		else value = get_json_member_string(reader,search);
+		
+		json_reader_end_member(reader);
 		
 		g_object_unref(reader);
 	}

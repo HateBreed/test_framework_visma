@@ -1,5 +1,6 @@
 {
-	"path": "Products",
-	"method": "GET",
-	"searchsuffix": "products?type=Mileage"
+	"data": {
+		"path": "products?type=Mileage",
+		"method": "GET"
+	}
 }

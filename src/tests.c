@@ -77,7 +77,7 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		// First is login, it is always first in the list
 		if(testidx == 0) {
 			tfile->recv = http_post(url,tfile->send,tfile->method);
-			gchar* token = get_value_of_member(tfile->recv,"token","data");
+			gchar* token = get_value_of_member(tfile->recv,"token",NULL);
 			set_token(token);
 			g_free(token);
 		}
@@ -85,41 +85,91 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		// Case creation is second
 		else if(testidx == 1) {
 			tfile->recv = http_post(url,tfile->send,tfile->method);
-			
-			gchar* value = get_value_of_member(tfile->recv,"guid","data");
-			jsonreply *query = create_delete_reply("guid",value);
-			gchar* geturl = g_strjoin("/",url,value,NULL);
-			tfile->recv = http_post(geturl,query,"GET");
-			g_free(value);
-			g_free(geturl);
-			
 		}
 		
 		// From third start the tests, here the required fields are checked and replaced
 		else {
 			for(gint regidx = 0; regidx < g_slist_length(tfile->required); regidx++) {
 			
+				gboolean root_task = FALSE;
 				// Get member to be replaced
 				gchar* member = (gchar*)g_slist_nth_data(tfile->required,regidx);
+				
+				gchar *search_file = NULL;	
+				gchar *search_member = NULL;
+				gchar *value = NULL;
+				
+				// Get the value from the case creation file
+				if(g_strcmp0(member,"task_guid") == 0) {
+					root_task = TRUE;
+					search_member = g_strdup("guid");
+					search_file = g_strdup("0");
+				}
+				else if(g_strcmp0(member,"worktype_guid") == 0) {
+					root_task = TRUE;
+					search_member = g_strdup("default_worktype_guid");
+					search_file = g_strdup("0");
+				}
+				else if(g_strcmp0(member,"user_guid") == 0) {
+					search_member = g_strdup(member);
+					search_file = g_strdup("login");
+				}
+				else {
+					gchar **search_members = g_strsplit(member,"_",3);
+					if(search_members[1]) search_member = g_strdup(search_members[1]);
+					g_strfreev(search_members);
+					search_file = g_strdup("0");
+				}
 				
 				// Get the case creation file (id = "0" always) details
 				testfile* temp = (testfile*)g_hash_table_find(test->files,
 					(GHRFunc)find_from_hash_table, 
-					"0");
-					
-				// Get the value from the case creation file
-				gchar* value = get_value_of_member(temp->recv,member,"data");
-				
-				//g_print("%s : %s\n",member,value);
-				
-				// Create new json using the "value" and save it
-				if(set_value_of_member(tfile->send, member, value)) {
-					g_print("success!");
+					search_file);
+
+				if(search_member) {
+					gchar* value = 
+						get_value_of_member(temp->recv,search_member, root_task ? "root_task" : NULL);
+								
+					// Create new json using the "value" and save it
+					if(set_value_of_member(tfile->send, member, value)) {
+						g_print(" ");
+					}
 				}
-				
+				g_free(search_file);
 				g_free(value);
+				g_free(search_member);
+				
 			}
-			//tfile->recv = http_post(url,tfile->send,tfile->method);
+			for(gint moreidx = 0; moreidx < g_slist_length(tfile->moreinfo); moreidx++) {
+				// Get member to be replaced
+				gchar* member = (gchar*)g_slist_nth_data(tfile->moreinfo,moreidx);
+				jsonreply* infosend = (jsonreply*)g_slist_nth_data(tfile->infosend,moreidx);
+				jsonreply* inforecv = NULL;
+				
+				if(infosend) {
+					gchar* infopath = get_value_of_member(infosend,"path",NULL);
+					gchar* method = get_value_of_member(infosend,"method",NULL);
+					
+					gchar* infourl = g_strjoin("/",test->URL,infopath,NULL);
+					g_print("url: %s\n",infourl);
+					
+					g_free(infosend->data);
+					infosend->data = g_strdup("");
+					infosend->length = 0;
+					
+					inforecv = http_post(infourl,infosend,method);
+					gchar* value = get_value_of_member(inforecv,"guid",NULL);
+					set_value_of_member(tfile->send,member,value);
+					
+					tfile->inforecv = g_slist_append(tfile->inforecv,inforecv);
+					
+					g_free(infopath);
+					g_free(method);
+					g_free(infourl);
+					g_free(value);
+				}
+			}
+			tfile->recv = http_post(url,tfile->send,tfile->method);
 		}
 
 		g_free(url);
@@ -135,6 +185,7 @@ void tests_unload_tests(testcase* test,gchar* testpath) {
 	jsonreply *delresp = NULL;
 	gchar* url = NULL;
 	
+	// Go through the sequence in reverse
 	for(gint testidx = g_slist_length(test_sequence) -1 ; testidx >= 0; testidx--) {
 
 		// First the login information need to be added, then tasks in number order
@@ -145,38 +196,41 @@ void tests_unload_tests(testcase* test,gchar* testpath) {
 			(GHRFunc)find_from_hash_table, 
 			searchparam);
 		
-		// First is login, it is always first in the list
-		if(testidx == 0) {
-			gchar *value = get_value_of_member(tfile->recv,"user_guid","data");
-			g_print("value=%s\n",value);
-			deldata = create_delete_reply("user_guid",value);
-			if(deldata) g_print("%s\n", deldata->data);
-			else g_print("NULL\n");
-			
-			if(deldata && value) {
-				url = g_strjoin("/",test->URL,"SignOut",value,NULL);
-				delresp = http_post(url,deldata,"GET");
-				g_free(value);
-			}
-			
-		}
+		// If we got a reply we can get all details
+		if(tfile->recv) {
 		
-		// Case creation is second
-		else if (testidx==1) {
-			gchar *value = get_value_of_member(tfile->recv,"guid","data");
-			g_print("value=%s\n",value);
-			deldata = create_delete_reply("guid",value);
+			// First (here last) is login, it is always first in the list
+			if(testidx == 0) {
+				gchar *value = get_value_of_member(tfile->recv,"user_guid",NULL);
+
+				deldata = create_delete_reply("user_guid",value);
 			
-			if(deldata && value) {
-				url = g_strjoin("/",test->URL,tfile->path,value,NULL);
-				delresp = http_post(url,deldata,"DELETE");
-				g_free(value);
+				if(deldata && value) {
+					url = g_strjoin("/",test->URL,"SignOut",value,NULL);
+					delresp = http_post(url,deldata,"GET");
+					g_free(value);
+					g_free(url);
+					free_jsonreply(delresp);
+				}
+				free_jsonreply(deldata);
+			
+			}
+		
+			// Rest in reverse order
+			else {
+				gchar *value = get_value_of_member(tfile->recv,"guid",NULL);
+
+				if(value) {
+					deldata = create_delete_reply("guid",value);			
+					url = g_strjoin("/",test->URL,tfile->path,value,NULL);
+					delresp = http_post(url,deldata,"DELETE");
+					g_free(value);
+					g_free(url);
+					free_jsonreply(delresp);
+					free_jsonreply(deldata);
+					}
 			}
 		}
-
-		g_free(url);
-		free_jsonreply(delresp);
-		free_jsonreply(deldata);
 	}
 	
 }
