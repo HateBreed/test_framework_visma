@@ -228,7 +228,8 @@ void free_testfile(gpointer data) {
 	g_free(file->method);
 	g_free(file->send->data);
 	g_free(file->send);
-	g_free(file->recv->data);
+	// recv jsonreply_t may not have been created
+	if(file->recv && file->recv->data) g_free(file->recv->data);
 	g_free(file->recv);
 	g_free(file);
 }
