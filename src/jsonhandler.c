@@ -226,14 +226,28 @@ void free_testfile(gpointer data) {
 	g_free(file->file);
 	g_free(file->path);
 	g_free(file->method);
-	g_free(file->send->data);
-	g_free(file->send);
-	// recv jsonreply_t may not have been created
-	if(file->recv && file->recv->data) g_free(file->recv->data);
-	g_free(file->recv);
+	free_jsonreply(file->send);
+	free_jsonreply(file->recv);
+	
+	g_slist_free_full(file->required,(GDestroyNotify)free_key);
+	g_slist_free_full(file->moreinfo,(GDestroyNotify)free_key);
+	
+	gint index = 0;
+	for(index = 0; file->infosend[index] != NULL; index++)
+		free_jsonreply(file->infosend[index]);
+	for(index = 0; file->inforecv[index] != NULL; index++)
+		free_jsonreply(file->inforecv[index]);
+	
 	g_free(file);
 }
 
+void free_jsonreply(gpointer data) {
+	jsonreply* item = (jsonreply*)data;
+	if(item) {
+		g_free(item->data);
+		g_free(item);
+	}
+}
 
 gchar* preference_make_path(user_preference* preference) {
 	//const gchar separator = G_DIR_SEPARATOR;

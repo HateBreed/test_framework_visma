@@ -13,6 +13,7 @@ void free_all_preferences(gpointer data);
 gboolean free_preferences(gchar* username);
 void free_testcase(gpointer testcase);
 void free_testfile(gpointer testfile);
+void free_jsonreply(gpointer data);
 void free_key(gpointer data);
 
 gboolean add_user(user_preference* preference);
