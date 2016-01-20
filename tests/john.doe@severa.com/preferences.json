@@ -55,7 +55,7 @@
 			},
 			{
 				"id":"6",
-				"file": "Empty.json"
+				"file": "Empty.json",
 				"path": "metrics",
 				"method": "GET"
 			}

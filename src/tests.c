@@ -70,7 +70,30 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		tfile->send->data = json_generator_to_data(generator,&(tfile->send->length));
 		
 		// Create url
-		gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
+		gchar* url = NULL;
+		
+		if(g_strrstr(tfile->path,"{id}")) {
+			testfile* temp = (testfile*)g_hash_table_find(test->files,
+				(GHRFunc)find_from_hash_table, 
+				"0");
+			gchar* caseid = get_value_of_member(temp->recv,"guid",NULL);
+			if(caseid) {
+				gchar** split_path = g_strsplit(tfile->path,"/",5);
+				for(gint splitidx = 0; split_path[splitidx] ; splitidx++) {
+					if(g_strcmp0(split_path[splitidx],"{id}") == 0) {
+						g_free(split_path[splitidx]);
+						split_path[splitidx] = caseid;
+					}
+					g_print("%s - ",split_path[splitidx]);
+				}
+				
+				g_free(tfile->path);
+				tfile->path = g_strjoinv("/",split_path);
+				g_strfreev(split_path);
+			}
+		}
+		
+		url = g_strjoin("/",test->URL,tfile->path,NULL);
 				
 		// First is login, it is always first in the list
 		if(testidx == 0) {
