@@ -133,7 +133,7 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 			tfile->moreinfo = g_slist_append(tfile->moreinfo,g_strdup(members[membidx]));
 			
 			JsonParser *infoparser = json_parser_new();
-			gchar* infopath = g_strjoin(".",filepath,"getinfo","json",NULL);
+			gchar* infopath = g_strjoin(".",filepath,"getinfo",members[membidx],"json",NULL);
 			
 			if(load_json_from_file(infoparser,infopath)) {
 				JsonGenerator *generator = json_generator_new();
