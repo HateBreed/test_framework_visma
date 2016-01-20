@@ -4,13 +4,6 @@
 static GHashTable *required_fields = NULL;
 static GSList *test_sequence = NULL;
 
-void testitem_destroy(gpointer data) {
-	testitem* item = (testitem*)data;
-	g_free(item->id);
-	g_free(item->data);
-	g_free(item);
-}
-
 void print_hashtable_strings(gpointer key, gpointer value, gpointer userdata) {
 	g_print("\"%s\":\"%s\"\n",(gchar*)key, (gchar*)value);
 }
@@ -33,7 +26,7 @@ void tests_destroy() {
 		g_hash_table_destroy(required_fields);
 		g_hash_table_unref(required_fields);
 	}
-	g_slist_free_full(test_sequence,(GDestroyNotify)testitem_destroy);
+	g_slist_free_full(test_sequence,NULL);
 }
 
 gboolean tests_run_test(gchar* username, testcase* test) {
@@ -87,8 +80,8 @@ void build_test_sequence(gchar* testpath, testcase* test) {
 			//g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
 			test_sequence = g_slist_prepend(test_sequence,g_strdup(tfile->id));
 			gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
-			tfile->reply = http_post(url,tfile->send->data,tfile->send->length,tfile->method);
-			g_print("%s\n",tfile->reply->data);
+			tfile->recv = http_post(url,tfile->send->data,tfile->send->length,tfile->method);
+			g_print("%s\n",tfile->recv->data);
 			g_free(url);
 		}
 		// Rest are added in order after login credentials

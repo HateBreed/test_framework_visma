@@ -44,7 +44,7 @@ testcase* preference_get_test(user_preference* preference, gchar* testname) {
 
 testcase* testcase_initialize(const gchar* URL, const gchar* name) {
 	if(!URL || !name) return NULL;
-	testcase* test = g_new(struct testcase_t,1);
+	testcase* test = g_new0(struct testcase_t,1);
 	test->URL = g_strdup(URL);
 	test->name = g_strdup(name);
 	test->files = g_hash_table_new_full(
@@ -70,7 +70,7 @@ gboolean testcase_add_file(testcase* test, testfile* file) {
 testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* path, const gchar* method) {
 	if(!id || !file || !path || !method) return NULL;
 	
-	testfile* tfile = g_new(struct testfile_t,1);
+	testfile* tfile = g_new0(struct testfile_t,1);
 	tfile->id = g_strdup(id);
 	tfile->path = g_strdup(path);
 	tfile->file = g_strdup(file);
@@ -79,7 +79,7 @@ testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* p
 	return tfile;
 }
 
-jsonreply* jsonreply_initialize(); {
+jsonreply* jsonreply_initialize() {
 	return g_new0(struct jsonreply_t,1);
 }
 
@@ -226,6 +226,10 @@ void free_testfile(gpointer data) {
 	g_free(file->file);
 	g_free(file->path);
 	g_free(file->method);
+	g_free(file->send->data);
+	g_free(file->send);
+	g_free(file->recv->data);
+	g_free(file->recv);
 	g_free(file);
 }
 
