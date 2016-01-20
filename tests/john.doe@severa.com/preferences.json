@@ -9,55 +9,63 @@
 				"id": "login",
 				"file": "Signin.json",
 				"path": "SignIn",
-				"method": "POST"
+				"method": "POST",
+				"delete": "no"
 			},
 			{
 				"id":"0",
 				"file":"Case.json",
 				"path":"Cases",
-				"method": "POST"
+				"method": "POST",
+				"delete": "yes"
 			},
 			{
 				"id": "1",
 				"file": "Hours1.json",
 				"path": "Hours",
-				"method": "POST"
+				"method": "POST",
+				"delete": "yes"
 			},
 			{
 				"id": "2",
 				"file": "Hours2.json",
 				"path": "Hours",
-				"method": "POST"
+				"method": "POST",
+				"delete": "yes"
 			},
 			{
 				"id":"3",
 				"file": "Item1.json",
 				"path": "Items",
-				"method": "POST"
+				"method": "POST",
+				"delete": "yes"
 			},
 			{
 				"id":"4",
 				"file": "Item2.json",
 				"path": "Items",
-				"method": "POST"
+				"method": "POST",
+				"delete": "yes"
 			},
 			{
 				"id":"5",
 				"file": "Expense.json",
 				"path": "Items",
-				"method": "POST"
+				"method": "POST",
+				"delete": "yes"
 			},
 			{
 				"id":"7",
 				"file": "Empty.json",
 				"path": "Cases/{id}/metrics",
-				"method": "GET"
+				"method": "GET",
+				"delete": "no"
 			},
 			{
 				"id":"6",
 				"file": "Empty.json",
 				"path": "metrics",
-				"method": "GET"
+				"method": "no"
 			}
 		]
 	}

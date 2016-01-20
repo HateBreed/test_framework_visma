@@ -254,7 +254,8 @@ void tests_unload_tests(testcase* test,gchar* testpath) {
 			}
 		
 			// Rest in reverse order
-			else {
+			else if(tfile->need_delete){
+				
 				gchar *value = get_value_of_member(tfile->recv,"guid",NULL);
 
 				if(value) {

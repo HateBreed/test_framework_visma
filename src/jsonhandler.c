@@ -67,7 +67,7 @@ gboolean testcase_add_file(testcase* test, testfile* file) {
 	return g_hash_table_insert(test->files,g_strdup(file->id),file);
 }
 
-testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* path, const gchar* method) {
+testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* path, const gchar* method, gboolean delete) {
 	if(!id || !file || !path || !method) return NULL;
 	
 	testfile* tfile = g_new0(struct testfile_t,1);
@@ -75,6 +75,7 @@ testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* p
 	tfile->path = g_strdup(path);
 	tfile->file = g_strdup(file);
 	tfile->method = g_strdup(method);
+	tfile->need_delete = delete;
 	//g_print("Added id :%s, file:%s, path:%s, method:%s ",tfile->id,tfile->file,tfile->path,tfile->method);
 	return tfile;
 }
@@ -129,16 +130,20 @@ gboolean read_preferences(user_preference* preferences) {
 				//g_print("%d files:\n",json_reader_count_elements(reader));
 				for(gint fileidx = 0; fileidx < json_reader_count_elements(reader); fileidx++) {
 					json_reader_read_element(reader,fileidx);
+					gboolean need_delete = FALSE;
 					
 					const gchar *id = get_json_member_string(reader,"id");
 					const gchar *file = get_json_member_string(reader,"file");
 					const gchar *path = get_json_member_string(reader,"path");
 					const gchar *method = get_json_member_string(reader,"method");
+					const gchar *delete = get_json_member_string(reader,"delete");
+					
+					if(g_strcmp0(delete,"yes") == 0) need_delete = TRUE;
 					
 					if(g_strcmp0(id,"login") == 0 || string_is_integer(id)) {
 					
 						//g_print("\tid :%s, file:%s, path:%s, method:%s ",id,file,path,method);
-						testfile* tfile = testfile_initialize(id,file,path,method);
+						testfile* tfile = testfile_initialize(id,file,path,method,need_delete);
 						if(!testcase_add_file(test,tfile)) 
 							g_print("replaced old data in test %s\n", test->name);
 					}

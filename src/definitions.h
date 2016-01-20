@@ -33,6 +33,7 @@ typedef struct testfile_t {
 	gchar *file; // Filename in test folder
 	gchar *path; // Path for REST API URL
 	gchar *method; // Method to use
+	gboolean need_delete;
 	jsonreply *send; // File data as json string
 	jsonreply *recv; // Reply sent by the server as json string
 	GSList *required; // List of required members from id 0 (case creation)
