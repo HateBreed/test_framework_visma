@@ -6,15 +6,6 @@
 #include "jsonutils.h"
 #include "utils.h"
 
-typedef struct testitem_t {
-	gchar *id;
-	gchar *data;
-	gsize length;
-} testitem;
-
-testitem* testitem_initialize();
-
-
 void tests_initialize();
 void tests_destroy();
 

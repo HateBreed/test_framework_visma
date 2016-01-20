@@ -27,4 +27,6 @@ gboolean testcase_add_file(testcase* test, testfile* file);
 
 testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* path, const gchar* method);
 
+jsonreply* jsonreply_initialize();
+
 #endif

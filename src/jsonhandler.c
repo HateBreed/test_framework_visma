@@ -79,6 +79,10 @@ testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* p
 	return tfile;
 }
 
+jsonreply* jsonreply_initialize(); {
+	return g_new0(struct jsonreply_t,1);
+}
+
 user_preference* load_preferences(gchar* username,gchar* password) {
 	if(!username || !password) return NULL;
 	

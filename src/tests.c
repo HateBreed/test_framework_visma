@@ -4,10 +4,6 @@
 static GHashTable *required_fields = NULL;
 static GSList *test_sequence = NULL;
 
-testitem* testitem_initialize() {
-	return g_new(struct testitem_t,1);
-}
-
 void testitem_destroy(gpointer data) {
 	testitem* item = (testitem*)data;
 	g_free(item->id);
@@ -82,22 +78,21 @@ void build_test_sequence(gchar* testpath, testcase* test) {
 		json_generator_set_root(generator, json_parser_get_root(parser));
 	
 		// Create new test item and set it to contain json as string data
-		testitem *item = testitem_initialize();
-		item->data = json_generator_to_data(generator,&(item->length));
-		item->id = g_strdup(tfile->id);
+		tfile->send = jsonreply_initialize();
+		tfile->send->data = json_generator_to_data(generator,&(tfile->send->length));
 		
-		g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
+		//g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
 		// First is login, it is always first in the list
 		if(testidx == 0) {
 			//g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
-			test_sequence = g_slist_prepend(test_sequence,item);
+			test_sequence = g_slist_prepend(test_sequence,g_strdup(tfile->id));
 			gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
-			jsonreply* reply = http_post(url,item->data,item->length,tfile->method);
-			g_print("%s\n",reply->data);
+			tfile->reply = http_post(url,tfile->send->data,tfile->send->length,tfile->method);
+			g_print("%s\n",tfile->reply->data);
 			g_free(url);
 		}
 		// Rest are added in order after login credentials
-		else test_sequence = g_slist_append(test_sequence,item);
+		else test_sequence = g_slist_append(test_sequence,g_strdup(tfile->id));
 	
 		g_free(searchparam);
 		g_object_unref(generator);
