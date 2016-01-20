@@ -45,7 +45,6 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 
 	// Go through the test sequence
 	for(gint testidx = 0; testidx < g_slist_length(test_sequence); testidx++) {
-		JsonParser *parser = json_parser_new();
 		
 		// Get the item in test sequence
 		gchar* searchparam = g_slist_nth_data(test_sequence,testidx);
@@ -55,19 +54,27 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 			(GHRFunc)find_from_hash_table, 
 			searchparam);
 		
-		// Create path for the file to be read
-		gchar* filepath = g_strjoin("/",testpath,tfile->file,NULL);
+		// Read any other file except Empty.json	
+		if(g_strcmp0(tfile->file,"Empty.json") != 0) {
+			// Create path for the file to be read
+			gchar* filepath = g_strjoin("/",testpath,tfile->file,NULL);
 		
-		// Read json detailed by this data (stucture)
-		if(!load_json_from_file(parser, filepath)) return;	
+			JsonParser *parser = json_parser_new();
 		
-		// Establish a generator to get the character representation
-		JsonGenerator *generator = json_generator_new();
-		json_generator_set_root(generator, json_parser_get_root(parser));
+			// Read json detailed by this data (stucture)
+			if(!load_json_from_file(parser, filepath)) return;	
+		
+			// Establish a generator to get the character representation
+			JsonGenerator *generator = json_generator_new();
+			json_generator_set_root(generator, json_parser_get_root(parser));
 	
-		// Create new jsonreply and set it to contain json as string data
-		tfile->send = jsonreply_initialize();
-		tfile->send->data = json_generator_to_data(generator,&(tfile->send->length));
+			// Create new jsonreply and set it to contain json as string data
+			tfile->send = jsonreply_initialize();
+			tfile->send->data = json_generator_to_data(generator,&(tfile->send->length));
+		
+			g_object_unref(generator);
+			g_object_unref(parser);
+		}
 		
 		// Create url
 		gchar* url = NULL;
@@ -206,13 +213,11 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 					g_free(value);
 				}
 			}
+
 			tfile->recv = http_post(url,tfile->send,tfile->method);
 		}
 
-		g_free(url);
-
-		g_object_unref(generator);
-		g_object_unref(parser);	
+		g_free(url);	
 	}
 }
 
