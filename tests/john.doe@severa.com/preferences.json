@@ -48,9 +48,15 @@
 				"method": "POST"
 			},
 			{
-				"id":"xxxxx",
-				"file": "Verify.json",
+				"id":"7",
+				"file": "Empty.json",
 				"path": "Cases/{id}/metrics",
+				"method": "GET"
+			},
+			{
+				"id":"6",
+				"file": "Empty.json"
+				"path": "metrics",
 				"method": "GET"
 			}
 		]
