@@ -4,8 +4,9 @@ const gchar* get_json_member_string(JsonReader *reader, const gchar* member) {
 	if(!reader || !member) return NULL;
 	const gchar* string = NULL;
 	
-	// If a member was found
-	if(json_reader_read_member(reader,member)) string = g_strdup(json_reader_get_string_value(reader));
+	// If a member was found, create a duplicate of string for returning
+	if(json_reader_read_member(reader,member))
+		string = g_strdup(json_reader_get_string_value(reader));
 	
 	json_reader_end_member(reader);
 	return string;
@@ -48,11 +49,14 @@ const gchar* get_value_of_member(jsonreply* jsondata, gchar* search) {
 	const gchar* value = NULL;
 	JsonParser *parser = json_parser_new();
 	
+	// Load json data
 	if(load_json_from_data(parser,jsondata->data,jsondata->length)) {
 		JsonReader *reader = json_reader_new (json_parser_get_root (parser));
 		
+		// Replies contain either data or error, only data is checked now
 		if(json_reader_read_member(reader,"data")) {
 		
+			// If within an array
 			if(json_reader_is_array(reader)) {
 				for(gint idx = 0; idx < json_reader_count_elements(reader); idx++) {
 					json_reader_read_element(reader,idx);
@@ -61,12 +65,12 @@ const gchar* get_value_of_member(jsonreply* jsondata, gchar* search) {
 					if(value) break;
 				}
 			}
+			// Plain json object
 			else if(json_reader_is_object(reader)) {
 				value = get_json_member_string(reader,search); 
 			}
 			// TODO check if is on other type
 		}
-		else g_print("No such member data\n");
 		
 		json_reader_end_member(reader);
 		
