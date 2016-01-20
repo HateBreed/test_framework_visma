@@ -13,4 +13,6 @@ gchar* get_value_of_member(jsonreply* data, gchar* search);
 
 gboolean set_value_of_member(jsonreply* data, gchar* member, gchar* value);
 
+jsonreply* create_delete_reply(gchar* member, gchar* value);
+
 #endif

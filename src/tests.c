@@ -32,6 +32,8 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 	
 	tests_conduct_tests(test,testpath);
 	
+	tests_unload_tests(test,testpath);
+	
 	g_free(testpath);
 	
 	return TRUE;
@@ -39,11 +41,11 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 
 void tests_conduct_tests(testcase* test, gchar* testpath) {
 
-	// First file with login
+	// Go through the test sequence
 	for(gint testidx = 0; testidx < g_slist_length(test_sequence); testidx++) {
 		JsonParser *parser = json_parser_new();
 		
-		// First the login information need to be added, then tasks in number order
+		// Get the item in test sequence
 		gchar* searchparam = g_slist_nth_data(test_sequence,testidx);
 		
 		// Get the data with the searchparameter from hash table
@@ -65,46 +67,105 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		tfile->send = jsonreply_initialize();
 		tfile->send->data = json_generator_to_data(generator,&(tfile->send->length));
 		
+		// Create url
+		gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
+		
+		//g_print("\n\nSENDING TO %s\n",url);
+		
 		// First is login, it is always first in the list
 		if(testidx == 0) {
-			//g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
-			gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
-			tfile->recv = http_post(url,tfile->send->data,tfile->send->length,tfile->method);
-			g_print("%s\n",tfile->recv->data);
-			g_free(url);
-			g_print("%d->%s %s %s\n\n",testidx,searchparam, tfile->id,tfile->file);
+			tfile->recv = http_post(url,tfile->send,tfile->method);
 		}
 		
-		// Login first, creation second, from third start the tests,
-		// here the required fields are checked and replaced
-		if(testidx > 1) {
+		// Case creation is second
+		else if(testidx == 1) {
+			//tfile->recv = http_post(url,tfile->send,tfile->method);
+		}
+		
+		// From third start the tests, here the required fields are checked and replaced
+		else {
 			for(gint regidx = 0; regidx < g_slist_length(tfile->required); regidx++) {
+			
+				// Get member to be replaced
 				gchar* member = (gchar*)g_slist_nth_data(tfile->required,regidx);
 				
+				// Get the case creation file (id = "0" always) details
 				testfile* temp = (testfile*)g_hash_table_find(test->files,
 					(GHRFunc)find_from_hash_table, 
-					"login");
-				gchar* value = get_value_of_member(temp->recv,"user_guid");
+					"0");
+					
+				// Get the value from the case creation file
+				gchar* value = get_value_of_member(temp->recv,member);
 				
-				g_print("%s : %s\n",member,value);
+				//g_print("%s : %s\n",member,value);
+				
+				// Create new json using the "value" and save it
 				if(set_value_of_member(tfile->send, member, value)) {
 					g_print("success!");
 				}
 				
 				g_free(value);
-				
-				// Find the value of field in tfile->recv json
-				//JsonReader *reader = json_reader_new( json_parser_get_root(parser) );
 			}
+			//tfile->recv = http_post(url,tfile->send,tfile->method);
 		}
-		
-		// Rest are added in order after login credentials
-		//else g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
-		//g_print("%s\n",tfile->send->data);
+
+		g_free(url);
 
 		g_object_unref(generator);
 		g_object_unref(parser);	
 	}
+}
+
+void tests_unload_tests(testcase* test,gchar* testpath) {
+	
+	jsonreply *deldata = NULL;
+	jsonreply *delresp = NULL;
+	gchar* url = NULL;
+	
+	for(gint testidx = g_slist_length(test_sequence) -1 ; testidx >= 0; testidx--) {
+
+		// First the login information need to be added, then tasks in number order
+		gchar* searchparam = g_slist_nth_data(test_sequence,testidx);
+		
+		// Get item in test sequence
+		testfile* tfile = (testfile*)g_hash_table_find(test->files,
+			(GHRFunc)find_from_hash_table, 
+			searchparam);
+		
+		// First is login, it is always first in the list
+		if(testidx == 0) {
+			gchar *value = get_value_of_member(tfile->recv,"user_guid");
+			g_print("value=%s\n",value);
+			deldata = create_delete_reply("user_guid",value);
+			if(deldata) g_print("%s\n", deldata->data);
+			else g_print("NULL\n");
+			
+			if(deldata && value) {
+				url = g_strjoin("/",test->URL,"SignOut",value,NULL);
+				delresp = http_post(url,deldata,"GET");
+				g_free(value);
+			}
+			
+		}
+		
+		// Case creation is second
+		else {
+			gchar *value = get_value_of_member(tfile->recv,"guid");
+			g_print("value=%s\n",value);
+			deldata = create_delete_reply("guid",value);
+			
+			if(deldata && value) {
+				url = g_strjoin("/",test->URL,tfile->path,value,NULL);
+				delresp = http_post(url,deldata,"DELETE");
+				g_free(value);
+			}
+		}
+
+		g_free(url);
+		free_jsonreply(delresp);
+		free_jsonreply(deldata);
+	}
+	
 }
 
 void tests_build_test_sequence(testcase* test) {

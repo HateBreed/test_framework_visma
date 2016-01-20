@@ -1,4 +1,5 @@
 #include "jsonutils.h"
+#include "jsonhandler.h"
 
 gchar* get_json_member_string(JsonReader *reader, const gchar* member) {
 	if(!reader || !member) return NULL;
@@ -132,4 +133,32 @@ gboolean set_value_of_member(jsonreply* jsondata, gchar* member, gchar* value) {
 	g_object_unref(parser);
 	
 	return TRUE;
+}
+
+jsonreply* create_delete_reply(gchar* member, gchar* value) {
+	if(!value || !member) return NULL;
+	
+	// Storage for reply
+	jsonreply* delreply = jsonreply_initialize();
+	
+	JsonBuilder *builder = json_builder_new();
+	json_builder_begin_object(builder);
+	
+	json_builder_set_member_name(builder,g_strdup(member));
+	
+	json_builder_add_string_value(builder,value);
+	json_builder_end_object(builder);
+	
+	// Generate new json from the built data
+	JsonGenerator *generator = json_generator_new();
+	json_generator_set_root(generator, json_builder_get_root(builder));		
+		
+	// Assign data to struct
+	delreply->data = json_generator_to_data(generator,&(delreply->length));
+		
+	g_object_unref(generator);
+	
+	g_object_unref(builder);
+	
+	return delreply;
 }

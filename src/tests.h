@@ -19,4 +19,6 @@ void tests_build_test_sequence(testcase* test);
 
 void tests_conduct_tests(testcase* test, gchar* testpath);
 
+void tests_unload_tests(testcase* test, gchar* testpath);
+
 #endif
