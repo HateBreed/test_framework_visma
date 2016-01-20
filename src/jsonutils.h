@@ -9,7 +9,7 @@ gboolean load_json_from_file(JsonParser* parser, gchar* path);
 
 gboolean load_json_from_data(JsonParser* parser, gchar* data, gssize length);
 
-gchar* get_value_of_member(jsonreply* data, gchar* search);
+gchar* get_value_of_member(jsonreply* data, gchar* search, gchar* mainmember);
 
 gboolean set_value_of_member(jsonreply* data, gchar* member, gchar* value);
 

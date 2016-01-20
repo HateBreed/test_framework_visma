@@ -44,7 +44,7 @@ gboolean load_json_from_data(JsonParser* parser, gchar* data, gssize length) {
 	return TRUE;
 }
 
-gchar* get_value_of_member(jsonreply* jsondata, gchar* search) {
+gchar* get_value_of_member(jsonreply* jsondata, gchar* search, gchar* mainmember ) {
 	if(!jsondata || !search) return NULL;
 	
 	gchar* value = NULL;
@@ -54,26 +54,28 @@ gchar* get_value_of_member(jsonreply* jsondata, gchar* search) {
 	if(load_json_from_data(parser,jsondata->data,jsondata->length)) {
 		JsonReader *reader = json_reader_new (json_parser_get_root (parser));
 		
-		// Replies contain either data or error, only data is checked now
-		if(json_reader_read_member(reader,"data")) {
+		if(mainmember) {
+			// Replies contain either data or error, only data is checked now
+			if(json_reader_read_member(reader,mainmember)) {
 		
-			// If within an array
-			if(json_reader_is_array(reader)) {
-				for(gint idx = 0; idx < json_reader_count_elements(reader); idx++) {
-					json_reader_read_element(reader,idx);
-					value = get_json_member_string(reader,search);
-					json_reader_end_element(reader);
-					if(value) break;
+				// If within an array
+				if(json_reader_is_array(reader)) {
+					for(gint idx = 0; idx < json_reader_count_elements(reader); idx++) {
+						json_reader_read_element(reader,idx);
+						value = get_json_member_string(reader,search);
+						json_reader_end_element(reader);
+						if(value) break;
+					}
 				}
+				// Plain json object
+				else if(json_reader_is_object(reader)) {
+					value = get_json_member_string(reader,search); 
+				}
+				// TODO check if is on other type
 			}
-			// Plain json object
-			else if(json_reader_is_object(reader)) {
-				value = get_json_member_string(reader,search); 
-			}
-			// TODO check if is on other type
+			json_reader_end_member(reader);
 		}
-		
-		json_reader_end_member(reader);
+		else value = get_json_member_string(reader,search);
 		
 		g_object_unref(reader);
 	}
@@ -141,12 +143,15 @@ jsonreply* create_delete_reply(gchar* member, gchar* value) {
 	// Storage for reply
 	jsonreply* delreply = jsonreply_initialize();
 	
+	// Begin object
 	JsonBuilder *builder = json_builder_new();
 	json_builder_begin_object(builder);
 	
+	// Set member and value
 	json_builder_set_member_name(builder,g_strdup(member));
-	
 	json_builder_add_string_value(builder,value);
+
+	// Close object
 	json_builder_end_object(builder);
 	
 	// Generate new json from the built data

@@ -22,6 +22,7 @@ void tests_destroy() {
 
 gboolean tests_run_test(gchar* username, testcase* test) {
 
+	http_init();
 	gchar* testpath = tests_make_path_for_test(username,test);
 
 	// Check which fields from the case creation reply have to be stored for future use
@@ -35,6 +36,7 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 	tests_unload_tests(test,testpath);
 	
 	g_free(testpath);
+	http_close();
 	
 	return TRUE;
 }
@@ -75,11 +77,22 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		// First is login, it is always first in the list
 		if(testidx == 0) {
 			tfile->recv = http_post(url,tfile->send,tfile->method);
+			gchar* token = get_value_of_member(tfile->recv,"token","data");
+			set_token(token);
+			g_free(token);
 		}
 		
 		// Case creation is second
 		else if(testidx == 1) {
-			//tfile->recv = http_post(url,tfile->send,tfile->method);
+			tfile->recv = http_post(url,tfile->send,tfile->method);
+			
+			gchar* value = get_value_of_member(tfile->recv,"guid","data");
+			jsonreply *query = create_delete_reply("guid",value);
+			gchar* geturl = g_strjoin("/",url,value,NULL);
+			tfile->recv = http_post(geturl,query,"GET");
+			g_free(value);
+			g_free(geturl);
+			
 		}
 		
 		// From third start the tests, here the required fields are checked and replaced
@@ -95,7 +108,7 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 					"0");
 					
 				// Get the value from the case creation file
-				gchar* value = get_value_of_member(temp->recv,member);
+				gchar* value = get_value_of_member(temp->recv,member,"data");
 				
 				//g_print("%s : %s\n",member,value);
 				
@@ -134,7 +147,7 @@ void tests_unload_tests(testcase* test,gchar* testpath) {
 		
 		// First is login, it is always first in the list
 		if(testidx == 0) {
-			gchar *value = get_value_of_member(tfile->recv,"user_guid");
+			gchar *value = get_value_of_member(tfile->recv,"user_guid","data");
 			g_print("value=%s\n",value);
 			deldata = create_delete_reply("user_guid",value);
 			if(deldata) g_print("%s\n", deldata->data);
@@ -149,8 +162,8 @@ void tests_unload_tests(testcase* test,gchar* testpath) {
 		}
 		
 		// Case creation is second
-		else {
-			gchar *value = get_value_of_member(tfile->recv,"guid");
+		else if (testidx==1) {
+			gchar *value = get_value_of_member(tfile->recv,"guid","data");
 			g_print("value=%s\n",value);
 			deldata = create_delete_reply("guid",value);
 			

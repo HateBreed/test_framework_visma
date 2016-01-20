@@ -3,7 +3,23 @@
 #include "connectionutils.h"
 
 /** This was inspired by the examples at http://curl.haxx.se/libcurl/c/example.html */
+CURL *curl = NULL;
+gchar* token = NULL;
 
+void http_init() {
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl = curl_easy_init();
+}
+
+void http_close() {
+	g_free(token);
+	curl_easy_cleanup(curl);
+	curl_global_cleanup();
+}
+
+void set_token(gchar* new_token) {
+	token = g_strjoin(" ","Authorization: ", new_token, NULL);
+}
 
 static gsize http_get_json_reply_callback(gchar* contents, gsize size, gsize nmemb, gpointer userp)
 {
@@ -27,21 +43,19 @@ static gsize http_get_json_reply_callback(gchar* contents, gsize size, gsize nme
 
 
 jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
-	CURL *curl;
+	
 	CURLcode res;
 	struct curl_slist *headers = NULL;
 	
 	jsonreply* reply = g_new0(struct jsonreply_t,1);
-	 
-	curl_global_init(CURL_GLOBAL_ALL);
-	curl = curl_easy_init();
 	
-	g_print("Content (%ld):%s \n\n", jsondata->length, jsondata->data);
+	g_print("Content (%ld):%s \n%s To: %s\n", jsondata->length, jsondata->data,method, url);
 
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		headers = curl_slist_append(headers, "Accept: application/json");
    		headers = curl_slist_append(headers, "Content-Type: application/json");
+   		if(token) headers = curl_slist_append(headers, token);  
    		
    		gchar *clength = g_strjoin(" ","Content-Length:",g_strdup_printf("%ld",jsondata->length),NULL);
    		headers = curl_slist_append(headers, clength);
@@ -61,12 +75,10 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 		if(res != CURLE_OK)	
 			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 			
-		curl_easy_cleanup(curl);
+		
 		curl_slist_free_all(headers);
 	}
-	g_print("Reply (%ld):%s \n", reply->length, reply->data);
-	
-	curl_global_cleanup();
+	g_print("Reply (%ld):%s \n\n", reply->length, reply->data);
 
 	return reply;
 }
