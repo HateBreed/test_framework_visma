@@ -8,6 +8,7 @@
 #include "jsonutils.h"
 #include "connectionutils.h"
 #include "tests.h"
+#include "definitions.h"
 
 gchar testpath[] = "tests/";
 

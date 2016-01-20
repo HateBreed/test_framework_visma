@@ -1,32 +1,9 @@
 #ifndef __JSON_HANLDER_H_
 #define __JSON_HANDLER_H_
 
-#define TASKPATH "tests"
-#define PREFERENCEFILE "preferences.json"
-
-#include <glib.h>
-#include <json-glib/json-glib.h>
-
 #include "jsonutils.h"
+#include "definitions.h"
 
-typedef struct user_preference_t {
-	gchar *username;
-	JsonParser *parser;
-	GSequence *tests;
-} user_preference;
-
-typedef struct testcase_t {
-	gchar *URL;
-	gchar *name;
-	GHashTable *files;
-} testcase ;
-
-typedef struct testfile_t {
-	gchar *id;
-	gchar *file;
-	gchar *path;
-	gchar *method;
-} testfile;
 
 user_preference* load_preferences(gchar* username,gchar* password);
 gboolean read_preferences(user_preference* preferences);

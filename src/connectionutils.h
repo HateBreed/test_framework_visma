@@ -2,11 +2,7 @@
 #define __CONNECTION_UTILS_H_
 
 #include <curl/curl.h>
-
-typedef struct jsonreply_t {
-  	gchar *data;
-  	gsize length;
-} jsonreply;
+#include "definitions.h"
 
 jsonreply* http_post(gchar* url, gchar* data, gsize length, gchar* method);
 

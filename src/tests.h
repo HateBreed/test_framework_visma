@@ -1,8 +1,7 @@
 #ifndef __TESTS_H_
 #define __TESTS_H_
 
-#include <glib.h>
-
+#include "definitions.h"
 #include "jsonhandler.h"
 #include "jsonutils.h"
 #include "utils.h"
@@ -14,7 +13,6 @@ typedef struct testitem_t {
 } testitem;
 
 testitem* testitem_initialize();
-
 
 
 void tests_initialize();
