@@ -47,10 +47,10 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 	CURLcode res;
 	struct curl_slist *headers = NULL;
 	
-	
 	jsonreply* reply = g_new0(struct jsonreply_t,1);
 	
-	g_print("Content (%ld):%s \n%s To: %s\n", jsondata->length, jsondata->data,method, url);
+	if(jsondata) g_print("Content (%ld):%s \n%s To: %s\n", jsondata->length, jsondata->data,method, url);
+	else g_print("Content (0))\n to %s\n",url);
 
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -58,14 +58,15 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
    		headers = curl_slist_append(headers, "Content-Type: application/json");
    		if(token) headers = curl_slist_append(headers, token);  
    		
-   		gchar *clength = g_strjoin(" ","Content-Length:",g_strdup_printf("%ld",jsondata->length),NULL);
-   		headers = curl_slist_append(headers, clength);
-   		//g_print("%s\n",clength);
-   		g_free(clength);
+   		if(jsondata) {
+   			gchar *clength = g_strjoin(" ","Content-Length:",g_strdup_printf("%ld",jsondata->length),NULL);
+	   		headers = curl_slist_append(headers, clength);
+	   		g_free(clength);
+	   	}
    		
    		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
    		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsondata->data);
+		if(jsondata) curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsondata->data);
 		
 		// For getting response
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_get_json_reply_callback);
@@ -74,7 +75,7 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 		res = curl_easy_perform(curl);
 
 		if(res != CURLE_OK)	
-			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+			g_print("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 			
 		curl_slist_free_all(headers);
 	}

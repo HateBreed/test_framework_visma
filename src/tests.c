@@ -71,9 +71,7 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		
 		// Create url
 		gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
-		
-		//g_print("\n\nSENDING TO %s\n",url);
-		
+				
 		// First is login, it is always first in the list
 		if(testidx == 0) {
 			tfile->recv = http_post(url,tfile->send,tfile->method);
@@ -91,29 +89,36 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		else {
 			for(gint regidx = 0; regidx < g_slist_length(tfile->required); regidx++) {
 			
-				gboolean root_task = FALSE;
-				// Get member to be replaced
-				gchar* member = (gchar*)g_slist_nth_data(tfile->required,regidx);
-				
 				gchar *search_file = NULL;	
 				gchar *search_member = NULL;
 				gchar *value = NULL;
+				gboolean root_task = FALSE;	
 				
-				// Get the value from the case creation file
+				// Get member to be replaced
+				gchar* member = (gchar*)g_slist_nth_data(tfile->required,regidx);
+				
+				// TODO rethink this
+				// If task guid is required, it can be gotten from root task of the case
 				if(g_strcmp0(member,"task_guid") == 0) {
 					root_task = TRUE;
 					search_member = g_strdup("guid");
 					search_file = g_strdup("0");
 				}
+				// If worktype guid is required it can be gotten from root task of the case
 				else if(g_strcmp0(member,"worktype_guid") == 0) {
 					root_task = TRUE;
 					search_member = g_strdup("default_worktype_guid");
 					search_file = g_strdup("0");
 				}
+				
+				// If user guid is required it can be gotten from the login info
 				else if(g_strcmp0(member,"user_guid") == 0) {
 					search_member = g_strdup(member);
 					search_file = g_strdup("login");
 				}
+				
+				// Otherwise the parameter to be searched is the last string after "_"
+				// and details are in the case file
 				else {
 					gchar **search_members = g_strsplit(member,"_",3);
 					if(search_members[1]) search_member = g_strdup(search_members[1]);
@@ -121,11 +126,12 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 					search_file = g_strdup("0");
 				}
 				
-				// Get the case creation file (id = "0" always) details
+				// Get the file
 				testfile* temp = (testfile*)g_hash_table_find(test->files,
 					(GHRFunc)find_from_hash_table, 
 					search_file);
 
+				// Something to search for?
 				if(search_member) {
 					gchar* value = 
 						get_value_of_member(temp->recv,search_member, root_task ? "root_task" : NULL);
@@ -140,27 +146,35 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 				g_free(search_member);
 				
 			}
+			
+			// Go through the list of items requiring more info
 			for(gint moreidx = 0; moreidx < g_slist_length(tfile->moreinfo); moreidx++) {
+			
 				// Get member to be replaced
 				gchar* member = (gchar*)g_slist_nth_data(tfile->moreinfo,moreidx);
+				
+				// Get the json holding the details for this parameter
 				jsonreply* infosend = (jsonreply*)g_slist_nth_data(tfile->infosend,moreidx);
 				jsonreply* inforecv = NULL;
 				
+				// Found json
 				if(infosend) {
+				
+					// Get path and method from file
 					gchar* infopath = get_value_of_member(infosend,"path",NULL);
 					gchar* method = get_value_of_member(infosend,"method",NULL);
 					
+					// Construct url
 					gchar* infourl = g_strjoin("/",test->URL,infopath,NULL);
-					g_print("url: %s\n",infourl);
+									
+					// Send an empty json to server to retrieve information
+					inforecv = http_post(infourl,NULL,method);
 					
-					g_free(infosend->data);
-					infosend->data = g_strdup("");
-					infosend->length = 0;
-					
-					inforecv = http_post(infourl,infosend,method);
+					// Search the value and replace it
 					gchar* value = get_value_of_member(inforecv,"guid",NULL);
-					set_value_of_member(tfile->send,member,value);
+					if(value) set_value_of_member(tfile->send,member,value);
 					
+					// Add result to list
 					tfile->inforecv = g_slist_append(tfile->inforecv,inforecv);
 					
 					g_free(infopath);
