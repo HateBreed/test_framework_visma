@@ -231,13 +231,9 @@ void free_testfile(gpointer data) {
 	
 	g_slist_free_full(file->required,(GDestroyNotify)free_key);
 	g_slist_free_full(file->moreinfo,(GDestroyNotify)free_key);
-	
-	gint index = 0;
-	for(index = 0; file->infosend[index] != NULL; index++)
-		free_jsonreply(file->infosend[index]);
-	for(index = 0; file->inforecv[index] != NULL; index++)
-		free_jsonreply(file->inforecv[index]);
-	
+	g_slist_free_full(file->infosend,(GDestroyNotify)free_jsonreply);
+	g_slist_free_full(file->inforecv,(GDestroyNotify)free_jsonreply);
+
 	g_free(file);
 }
 
