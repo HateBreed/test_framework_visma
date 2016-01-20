@@ -221,20 +221,23 @@ void free_testcase(gpointer data) {
 }
 
 void free_testfile(gpointer data) {
-	testfile* file = (testfile*)data;
-	g_free(file->id);
-	g_free(file->file);
-	g_free(file->path);
-	g_free(file->method);
-	free_jsonreply(file->send);
-	free_jsonreply(file->recv);
+	testfile* tfile = (testfile*)data;
+		
+	g_free(tfile->id);
+	g_free(tfile->file);
+	g_free(tfile->path);
+	g_free(tfile->method);
 	
-	g_slist_free_full(file->required,(GDestroyNotify)free_key);
-	g_slist_free_full(file->moreinfo,(GDestroyNotify)free_key);
-	g_slist_free_full(file->infosend,(GDestroyNotify)free_jsonreply);
-	g_slist_free_full(file->inforecv,(GDestroyNotify)free_jsonreply);
+	free_jsonreply(tfile->send);
+	free_jsonreply(tfile->recv);
+	
+	g_slist_free_full(tfile->required,(GDestroyNotify)free_key);
+	g_slist_free_full(tfile->moreinfo,(GDestroyNotify)free_key);
+	
+	g_slist_free_full(tfile->infosend,(GDestroyNotify)free_jsonreply);
+	g_slist_free_full(tfile->inforecv,(GDestroyNotify)free_jsonreply);
 
-	g_free(file);
+	g_free(tfile);
 }
 
 void free_jsonreply(gpointer data) {

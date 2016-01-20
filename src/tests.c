@@ -1,7 +1,6 @@
 #include "tests.h"
 #include "connectionutils.h"
 
-static GHashTable *required_fields = NULL;
 static GSList *test_sequence = NULL;
 
 void print_hashtable_strings(gpointer key, gpointer value, gpointer userdata) {
@@ -14,19 +13,11 @@ gboolean find_from_hash_table(gpointer key, gpointer value, gpointer user_data) 
 }
 
 void tests_initialize() {
-	if(!required_fields) required_fields = g_hash_table_new_full(
-		(GHashFunc)g_str_hash,
-		(GEqualFunc)g_str_equal,
-		NULL,
-		NULL);
+
 }
 
 void tests_destroy() {
-	if(!required_fields) {
-		g_hash_table_destroy(required_fields);
-		g_hash_table_unref(required_fields);
-	}
-	g_slist_free_full(test_sequence,NULL);
+	g_slist_free_full(test_sequence,(GDestroyNotify)free_key);
 }
 
 gboolean tests_run_test(gchar* username, testcase* test) {
@@ -35,25 +26,25 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 
 	// Check which fields from the case creation reply have to be stored for future use
 	g_hash_table_foreach(test->files, (GHFunc)tests_check_fields_from_testfiles, testpath);
-	// Print the fields
-	g_hash_table_foreach(required_fields,(GHFunc)print_hashtable_strings,NULL);
 	
 	// Create the sequence of sending tests (json files as charstring data)
-	build_test_sequence(testpath,test);
+	tests_build_test_sequence(test);
+	
+	tests_conduct_tests(test,testpath);
 	
 	g_free(testpath);
 	
 	return TRUE;
 }
 
-void build_test_sequence(gchar* testpath, testcase* test) {
-	
+void tests_conduct_tests(testcase* test, gchar* testpath) {
+
 	// First file with login
-	for(gint testidx = 0; testidx < g_hash_table_size(test->files); testidx++) {
+	for(gint testidx = 0; testidx < g_slist_length(test_sequence); testidx++) {
 		JsonParser *parser = json_parser_new();
 		
 		// First the login information need to be added, then tasks in number order
-		gchar* searchparam = (testidx == 0 ? g_strdup("login") : g_strdup_printf("%d",testidx-1));
+		gchar* searchparam = g_slist_nth_data(test_sequence,testidx);
 		
 		// Get the data with the searchparameter from hash table
 		testfile* tfile = (testfile*)g_hash_table_find(test->files,
@@ -78,18 +69,39 @@ void build_test_sequence(gchar* testpath, testcase* test) {
 		// First is login, it is always first in the list
 		if(testidx == 0) {
 			//g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
-			test_sequence = g_slist_prepend(test_sequence,g_strdup(tfile->id));
-			gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
-			tfile->recv = http_post(url,tfile->send->data,tfile->send->length,tfile->method);
-			g_print("%s\n",tfile->recv->data);
-			g_free(url);
+			//gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
+			//tfile->recv = http_post(url,tfile->send->data,tfile->send->length,tfile->method);
+			//g_print("%s\n",tfile->recv->data);
+			//g_free(url);
+			g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
 		}
+		// Rest are added in order after login credentials
+		//else g_print("%d->%s %s %s\n",testidx,searchparam, tfile->id,tfile->file);
+		//g_print("%s\n",tfile->send->data);
+
+		g_object_unref(generator);
+		g_object_unref(parser);	
+	}
+}
+
+void tests_build_test_sequence(testcase* test) {
+	// First file with login
+	for(gint testidx = 0; testidx < g_hash_table_size(test->files); testidx++) {
+		
+		// First the login information need to be added, then tasks in number order
+		gchar* searchparam = (testidx == 0 ? g_strdup("login") : g_strdup_printf("%d",testidx-1));
+		
+		// Get the data with the searchparameter from hash table
+		testfile* tfile = (testfile*)g_hash_table_find(test->files,
+			(GHRFunc)find_from_hash_table, 
+			searchparam);
+					
+		// First is login, it is always first in the list
+		if(testidx == 0) test_sequence = g_slist_prepend(test_sequence,g_strdup(tfile->id));
 		// Rest are added in order after login credentials
 		else test_sequence = g_slist_append(test_sequence,g_strdup(tfile->id));
 	
 		g_free(searchparam);
-		g_object_unref(generator);
-		g_object_unref(parser);
 	}
 }
 
@@ -114,15 +126,29 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 		const gchar* membstring = get_json_member_string(reader,members[membidx]);
 		
 		if(g_strcmp0(membstring,"{parent}") == 0) {
-			if(!required_fields) tests_initialize();
-			if(g_hash_table_insert(required_fields,g_strdup(members[membidx]),""))
-				g_print("Added %s as required field (size %d).\n",
-					members[membidx],
-					g_hash_table_size(required_fields));
-			else g_print("%s was already a required field.\n",members[membidx]);
+			tfile->required = g_slist_append(tfile->required,g_strdup(members[membidx]));
+			//g_print ("Added %s\n", membstring);
 		}
 		if(g_strcmp0(membstring,"{getinfo}") == 0) {
-			// TODO react to this
+			tfile->moreinfo = g_slist_append(tfile->moreinfo,g_strdup(members[membidx]));
+			
+			JsonParser *infoparser = json_parser_new();
+			gchar* infopath = g_strjoin(".",filepath,"getinfo","json",NULL);
+			
+			if(load_json_from_file(infoparser,infopath)) {
+				JsonGenerator *generator = json_generator_new();
+				json_generator_set_root(generator, json_parser_get_root(infoparser));
+				
+				jsonreply* info = jsonreply_initialize();
+				info->data = json_generator_to_data(generator,&(info->length));
+				g_print("%s (%s)-> %s\n",members[membidx],tfile->file,info->data);
+				
+				gint add_position = g_slist_length(tfile->moreinfo) - 1;
+				tfile->infosend = g_slist_insert(tfile->infosend,info,add_position);
+
+				g_object_unref(generator);
+			}
+			g_object_unref(infoparser);
 		}
 	}
 	
