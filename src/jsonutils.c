@@ -173,3 +173,37 @@ jsonreply* create_delete_reply(gchar* member, gchar* value) {
 	
 	return delreply;
 }
+
+gboolean verify_server_response(jsonreply* request, jsonreply* response) {
+
+	gboolean test_ok = TRUE;
+	JsonParser *req_parser = json_parser_new();
+	JsonParser *res_parser = json_parser_new();
+	
+	if(load_json_from_data(req_parser,request->data,request->length) &&
+		load_json_from_data(res_parser,response->data,response->length)) {
+		
+		JsonReader *req_reader = json_reader_new (json_parser_get_root (req_parser));
+		
+		gchar** members = json_reader_list_members(req_reader);
+		
+		for(gint membidx = 0; members[membidx] != NULL; membidx++) {
+
+			// Get the value of current member
+			gchar* req_membstring = get_json_member_string(req_reader,members[membidx]);
+			gchar* res_membstring = get_value_of_member(response,members[membidx],NULL);
+			
+			if(req_membstring && res_membstring) {
+				if(g_strcmp0(req_membstring,res_membstring) != 0) {
+					g_print("Values of %s differ (request: %s - response: %s)\n",
+						members[membidx], req_membstring, res_membstring);
+					test_ok = FALSE;
+				}
+			}
+		}		
+	}
+	
+	g_object_unref(req_parser);
+	g_object_unref(res_parser);
+	return test_ok;
+}

@@ -76,31 +76,39 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 			g_object_unref(parser);
 		}
 		
-		// Create url
-		gchar* url = NULL;
-		
+		// If path contains {id} it needs to be replaced with case id
 		if(g_strrstr(tfile->path,"{id}")) {
+		
+			// Get case file
 			testfile* temp = (testfile*)g_hash_table_find(test->files,
 				(GHRFunc)find_from_hash_table, 
 				"0");
+			
+			// Get case id
 			gchar* caseid = get_value_of_member(temp->recv,"guid",NULL);
+			
 			if(caseid) {
+				
+				// Tokenize path
 				gchar** split_path = g_strsplit(tfile->path,"/",5);
+				
+				// Go through the tokens and replace {id} with case id
 				for(gint splitidx = 0; split_path[splitidx] ; splitidx++) {
 					if(g_strcmp0(split_path[splitidx],"{id}") == 0) {
 						g_free(split_path[splitidx]);
 						split_path[splitidx] = caseid;
 					}
-					g_print("%s - ",split_path[splitidx]);
 				}
 				
+				// Replace the path with new
 				g_free(tfile->path);
 				tfile->path = g_strjoinv("/",split_path);
 				g_strfreev(split_path);
 			}
 		}
 		
-		url = g_strjoin("/",test->URL,tfile->path,NULL);
+		// Create url
+		gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
 				
 		// First is login, it is always first in the list
 		if(testidx == 0) {
@@ -113,6 +121,9 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		// Case creation is second
 		else if(testidx == 1) {
 			tfile->recv = http_post(url,tfile->send,tfile->method);
+			if(verify_server_response(tfile->send,tfile->recv)) {
+				g_print ("Case added correctly\n");
+			}
 		}
 		
 		// From third start the tests, here the required fields are checked and replaced
@@ -215,6 +226,15 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 			}
 
 			tfile->recv = http_post(url,tfile->send,tfile->method);
+			
+			// If there is something to verify
+			if(tfile->send) {
+				g_print("Verifying test id \"%s\" (file: %s):\n",tfile->id,tfile->file);
+				if(verify_server_response(tfile->send,tfile->recv)) {
+					g_print ("Test added correctly\n");
+				}
+				g_print("\n\n");
+			}
 		}
 
 		g_free(url);	
@@ -314,29 +334,39 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 
 	gchar** members = json_reader_list_members(reader);
 	
-	//g_print("File: %s\n",filepath);
+	// Go through all members of this json
 	for(gint membidx = 0; members[membidx] != NULL; membidx++) {
-		//g_print("%s\n",members[membidx]);
+
+		// Get the value of current member
 		gchar* membstring = get_json_member_string(reader,members[membidx]);
 		
+		// Requires information from other file
 		if(g_strcmp0(membstring,"{parent}") == 0) {
 			tfile->required = g_slist_append(tfile->required,g_strdup(members[membidx]));
-			//g_print ("Added %s\n", membstring);
 		}
+		
+		// Requires more information from the server
 		if(g_strcmp0(membstring,"{getinfo}") == 0) {
+		
+			// Add member name to list
 			tfile->moreinfo = g_slist_append(tfile->moreinfo,g_strdup(members[membidx]));
 			
 			JsonParser *infoparser = json_parser_new();
+			
+			// Create path to the file offering more information
 			gchar* infopath = g_strjoin(".",filepath,"getinfo",members[membidx],"json",NULL);
 			
+			// Load the json file
 			if(load_json_from_file(infoparser,infopath)) {
 				JsonGenerator *generator = json_generator_new();
 				json_generator_set_root(generator, json_parser_get_root(infoparser));
 				
+				// Initialize struct for the new json and store json
 				jsonreply* info = jsonreply_initialize();
 				info->data = json_generator_to_data(generator,&(info->length));
-				//g_print("%s (%s)-> %s\n",members[membidx],tfile->file,info->data);
 				
+				// To verify that this item is in correct position in the list 
+				// and corresponds to the member string location
 				gint add_position = g_slist_length(tfile->moreinfo) - 1;
 				tfile->infosend = g_slist_insert(tfile->infosend,info,add_position);
 
@@ -360,23 +390,3 @@ gchar* tests_make_path_for_test(gchar* username, testcase* test) {
 	gchar* filepath = g_strjoin("/",TASKPATH,username,test->name,NULL);
 	return filepath;
 }
-/*
-	Select given test from user_preferences
-	Create new parser and load each file separately
-	Check fields of the file for {parent} unless 0
-	Create JsonGenerator from parser root JsonNode
-	use connectionutils to establish http connection with curl to the URL of test
-	get data from JsonGenerator to be sent to server
-	Get the response from connectionutils
-	Check the same fields that were in the file
-	If id == 0, store the json/required fields in a hashtable
-	To get required fields while processing first all files:
-		Get all member names having {parent}
-		Add each of the member names into hashtable as keys with "" content
-		When creating the case (with id 0) get each of these member names from
-			the response and store them into the hashtable where these can be
-			retrieved when required
-			
-	Last, delete all file contents that were sent (with DELETE method) and
-	finally delete the case
-*/

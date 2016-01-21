@@ -55,17 +55,11 @@
 				"delete": "yes"
 			},
 			{
-				"id":"7",
+				"id":"6",
 				"file": "Empty.json",
 				"path": "Cases/{id}/metrics",
 				"method": "GET",
 				"delete": "no"
-			},
-			{
-				"id":"6",
-				"file": "Empty.json",
-				"path": "metrics",
-				"method": "no"
 			}
 		]
 	}

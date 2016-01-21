@@ -1,7 +1,7 @@
 {
 	"task_guid": "{parent}",
 	"hours": "3",
-	"worktype_guid": "{parent}",
-	"worktype_name": "project_management",
+	"worktype_guid": "bf1f7681951002c741fbf069740e7e4d",
+	"worktype_name": "project management",
 	"date": "2016-01-20"
 }

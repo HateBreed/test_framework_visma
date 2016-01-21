@@ -30,7 +30,7 @@ static gsize http_get_json_reply_callback(gchar* contents, gsize size, gsize nme
  	else reply->data = (gchar*)g_try_malloc0(reply->length + realsize + 1);
 	
 	if(reply->data == NULL) {
-		printf("not enough memory (realloc returned NULL)\n");
+		g_print("not enough memory (realloc returned NULL)\n");
 		return 0;
   }
  
