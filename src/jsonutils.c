@@ -1,5 +1,5 @@
 #include "jsonutils.h"
-#include "jsonhandler.h"
+#include "preferences.h"
 
 gchar* get_json_member_string(JsonReader *reader, const gchar* member) {
 	if(!reader || !member) return NULL;

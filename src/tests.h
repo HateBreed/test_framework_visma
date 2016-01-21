@@ -2,7 +2,7 @@
 #define __TESTS_H_
 
 #include "definitions.h"
-#include "jsonhandler.h"
+#include "preferences.h"
 #include "jsonutils.h"
 #include "utils.h"
 

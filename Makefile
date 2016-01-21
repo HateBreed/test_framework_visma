@@ -1,5 +1,5 @@
 PREFIX=src
-SOURCES=$(PREFIX)/main.c $(PREFIX)/utils.c $(PREFIX)/jsonutils.c $(PREFIX)/jsonhandler.c $(PREFIX)/connectionutils.c $(PREFIX)/tests.c
+SOURCES=$(PREFIX)/main.c $(PREFIX)/utils.c $(PREFIX)/jsonutils.c $(PREFIX)/preferences.c $(PREFIX)/connectionutils.c $(PREFIX)/tests.c
 COMPILER=gcc
 COPTS=-Wall --std=gnu99
 COPTSD=$(COPTS) -g -DG_MESSAGES_DEBUG
