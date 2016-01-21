@@ -80,6 +80,8 @@ No compromises, except that the user interface is lacking finesse. It is crude. 
 
 ## Open issues
 
+Character encoding is not done at any point. This must be addressed. On Linux everything is UTF-8 but ISO8859-something is used on serverside, resulting in € character to be printed as ? and messing up some printing to cli. Need to look at glib documentation how to do this correctly.
+
 There are memory leaks. Some might be because of agile coding and hurry, others may be false positives reported by valgrind because glib utilizes memory slicing not well understood by valgrind.
 
 Error checking is lacking in many cases. Again, a symptom caused by agile coding and hurry.
