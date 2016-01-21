@@ -4,7 +4,7 @@ COMPILER=gcc
 COPTS=-Wall --std=gnu99
 COPTSD=$(COPTS) -g -DG_MESSAGES_DEBUG
 LIBS=`pkg-config --cflags --libs glib-2.0 json-glib-1.0` -lcurl
-BINARY=main
+BINARY=testfw
 
 compile:
 	$(COMPILER) $(COPTS) $(LIBS) $(SOURCES) -o $(BINARY)
