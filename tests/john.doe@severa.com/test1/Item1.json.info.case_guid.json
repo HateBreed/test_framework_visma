@@ -1,5 +1,7 @@
 {
-	"root_task": "no",
-	"search_member": "guid",
-	"search_file": "0"
+	"data": {
+		"root_task": "no",
+		"search_member": "guid",
+		"search_file": "0"
+	}
 }
