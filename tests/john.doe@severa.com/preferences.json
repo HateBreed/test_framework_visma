@@ -56,7 +56,7 @@
 			},
 			{
 				"id":"6",
-				"file": "Empty.json",
+				"file": "Verify.json",
 				"path": "Cases/{id}/metrics",
 				"method": "GET",
 				"delete": "no"

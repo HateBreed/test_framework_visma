@@ -19,7 +19,7 @@ gboolean load_json_from_file(JsonParser* parser, gchar* filepath) {
 	json_parser_load_from_file(parser, filepath, &error);
 		
 	if (error) {
-		g_print ("Cannot parse file \"%s\". Reason: %s\n", filepath, error->message);
+		g_error ("Cannot parse file \"%s\". Reason: %s\n", filepath, error->message);
 		g_error_free(error);
 		g_object_unref(parser);
 		return FALSE;
@@ -35,7 +35,7 @@ gboolean load_json_from_data(JsonParser* parser, gchar* data, gssize length) {
 	json_parser_load_from_data(parser, data, length, &error);
 		
 	if (error) {
-		g_print ("Cannot parse data. Reason: %s\n", error->message);
+		g_error ("Cannot parse data. Reason: %s\n", error->message);
 		g_error_free(error);
 		g_object_unref(parser);
 		return FALSE;
@@ -68,15 +68,14 @@ gchar* get_value_of_member(jsonreply* jsondata, gchar* search, gchar* search2) {
 			}
 			// Plain json object
 			else if(json_reader_is_object(reader)) {
-				gboolean success = FALSE;
 				if(search2) {
-					g_print("search: %s search2: %s\n",search,search2);
+					g_debug("get_value_of_member: search: %s search2: %s.",search,search2);
 					if(json_reader_read_member(reader,search2)) {
-						success = TRUE;
+						g_debug(".. found\n");
 					}
 				}
 				value = get_json_member_string(reader,search);
-				if(success) json_reader_end_member(reader);
+				if(search2) json_reader_end_member(reader);
 			}
 			// TODO check if is on other type
 		}
@@ -174,9 +173,64 @@ jsonreply* create_delete_reply(gchar* member, gchar* value) {
 	return delreply;
 }
 
+gboolean verify_in_array(JsonParser *parser, gchar* check_value1, gchar* check_value2) {
+	
+	if(!parser || !check_value1 || !check_value2) {
+		g_error("NULL input\n");
+		return FALSE;
+	}
+	
+	gboolean success = TRUE;
+	JsonReader *reader = json_reader_new (json_parser_get_root (parser));
+	
+	if(json_reader_read_member(reader,"data")) {
+		if(json_reader_is_array(reader)) {
+		
+			
+			for(gint idx = 0; idx < json_reader_count_elements(reader); idx++) {
+				gboolean found = FALSE;
+				json_reader_read_element(reader,idx);
+				
+				gchar *value1 = NULL, *value2 = NULL;
+				gchar** members = json_reader_list_members(reader);
+				
+				for(gint membidx = 0; members[membidx] != NULL; membidx++) {
+				
+					if(g_strcmp0(members[membidx],"title") == 0) {
+						value1 = get_json_member_string(reader,members[membidx]);
+						if(g_strcmp0(value1,check_value1) == 0) {
+							found = TRUE;
+						}
+					}
+					if(g_strcmp0(members[membidx],"formatted_value") == 0 && found) {
+						value2 = get_json_member_string(reader,members[membidx]);
+						if(g_strcmp0(value2,check_value2) != 0) {
+							success = FALSE;
+							g_print(".. failure.\n\"%s\" values \"%s\" and \"%s\" differ\n", check_value1, check_value2, value2);
+						}
+					}
+				} // for
+				
+				g_free(value1);
+				g_free(value2);
+				g_strfreev(members);
+				json_reader_end_element(reader);
+			} // for			
+		}
+		else g_print("not array\n");
+	}
+	else g_print("no data member\n");
+	
+	json_reader_end_element(reader);
+	g_object_unref(reader);
+	
+	return success;
+}
+
 gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 
 	gboolean test_ok = TRUE;
+	gboolean array = FALSE;
 	JsonParser *req_parser = json_parser_new();
 	JsonParser *res_parser = json_parser_new();
 	
@@ -185,22 +239,61 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 		
 		JsonReader *req_reader = json_reader_new (json_parser_get_root (req_parser));
 		
-		gchar** members = json_reader_list_members(req_reader);
-		
-		for(gint membidx = 0; members[membidx] != NULL; membidx++) {
+		if(json_reader_read_member(req_reader,"data")) {
+			if(json_reader_is_array(req_reader)) {
+				array = TRUE;
+				for(gint idx = 0; idx < json_reader_count_elements(req_reader); idx++) {
+					json_reader_read_element(req_reader,idx);
+					
+					gchar *value1 = NULL;
+					gchar *value2 = NULL;
+					
+					gchar** members = json_reader_list_members(req_reader);
+					
+					for(gint membidx = 0; members[membidx] != NULL; membidx++) {
 
-			// Get the value of current member
-			gchar* req_membstring = get_json_member_string(req_reader,members[membidx]);
-			gchar* res_membstring = get_value_of_member(response,members[membidx],NULL);
-			
-			if(req_membstring && res_membstring) {
-				if(g_strcmp0(req_membstring,res_membstring) != 0) {
-					g_print("Values of %s differ (request: %s - response: %s)\n",
-						members[membidx], req_membstring, res_membstring);
-					test_ok = FALSE;
+						if(g_strcmp0(members[membidx],"title") == 0)
+								value1 = get_json_member_string(req_reader,members[membidx]);
+						if(g_strcmp0(members[membidx],"formatted_value") == 0)
+								value2 = get_json_member_string(req_reader,members[membidx]);
+					}
+					g_print("Checking that \"%s\" is \"%s\" .",value1,value2);
+					test_ok = verify_in_array(res_parser,value1,value2);
+					if(test_ok) g_print("..ok.\n");
+					g_free(value1);
+					g_free(value2);
+					g_strfreev(members);
+					json_reader_end_element(req_reader);
 				}
 			}
-		}		
+		}
+		else {
+			if(!array) json_reader_end_member(req_reader);
+		
+			gchar** members = json_reader_list_members(req_reader);
+		
+			for(gint membidx = 0; members[membidx] != NULL; membidx++) {
+			
+				// Get the value of current member
+				gchar* req_membstring = get_json_member_string(req_reader,members[membidx]);
+				gchar* res_membstring = get_value_of_member(response,members[membidx],NULL);
+				
+				g_debug("value %s: %s\n",members[membidx], req_membstring);
+			
+				if(req_membstring && res_membstring) {
+					if(g_strcmp0(req_membstring,res_membstring) != 0) {
+						g_print("Values of %s differ (request: %s - response: %s)\n",
+							members[membidx], req_membstring, res_membstring);
+						test_ok = FALSE;
+					}
+				}
+				
+				g_free(req_membstring);
+				g_free(res_membstring);
+			}
+			g_strfreev(members);
+		}
+		g_object_unref(req_reader);
 	}
 	
 	g_object_unref(req_parser);

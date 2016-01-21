@@ -7,14 +7,11 @@ CURL *curl = NULL;
 gchar* token = NULL;
 
 void http_init() {
-	curl_global_init(CURL_GLOBAL_ALL);
-	curl = curl_easy_init();
+	token = NULL;
 }
 
 void http_close() {
 	g_free(token);
-	curl_easy_cleanup(curl);
-	curl_global_cleanup();
 }
 
 void set_token(gchar* new_token) {
@@ -30,7 +27,7 @@ static gsize http_get_json_reply_callback(gchar* contents, gsize size, gsize nme
  	else reply->data = (gchar*)g_try_malloc0(reply->length + realsize + 1);
 	
 	if(reply->data == NULL) {
-		g_print("not enough memory (realloc returned NULL)\n");
+		g_error("not enough memory (realloc returned NULL)\n");
 		return 0;
   }
  
@@ -48,11 +45,13 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 	struct curl_slist *headers = NULL;
 	
 	if(!url || !method) return NULL;
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl = curl_easy_init();
 	
 	jsonreply* reply = g_new0(struct jsonreply_t,1);
 	
-	if(g_strcmp0(method,"POST") != 0) g_print("Content (%ld):%s \n%s To: %s\n", jsondata->length, jsondata->data,method, url);
-	else g_print("Content (0))\n%s to %s\n",method,url);
+	if(g_strcmp0(method,"POST") == 0) g_debug("Content (%ld):%s \n%s To: %s\n", jsondata->length, jsondata->data,method, url);
+	else g_debug("Content (0)\n%s to %s\n",method,url);
 
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -80,8 +79,9 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 			g_print("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 			
 		curl_slist_free_all(headers);
+		curl_easy_cleanup(curl);
 	}
-	g_print("Reply (%ld):%s \n\n", reply->length, reply->data);
-
+	g_debug("Reply (%ld):%s \n\n", reply->length, reply->data);
+	curl_global_cleanup();
 	return reply;
 }
