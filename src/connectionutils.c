@@ -47,6 +47,8 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 	CURLcode res;
 	struct curl_slist *headers = NULL;
 	
+	if(!url || !method) return NULL;
+	
 	jsonreply* reply = g_new0(struct jsonreply_t,1);
 	
 	if(jsondata) g_print("Content (%ld):%s \n%s To: %s\n", jsondata->length, jsondata->data,method, url);
@@ -58,7 +60,7 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
    		headers = curl_slist_append(headers, "Content-Type: application/json");
    		if(token) headers = curl_slist_append(headers, token);  
    		
-   		if(jsondata) {
+   		if(g_strcmp0(method,"POST") == 0) {
    			gchar *clength = g_strjoin(" ","Content-Length:",g_strdup_printf("%ld",jsondata->length),NULL);
 	   		headers = curl_slist_append(headers, clength);
 	   		g_free(clength);
