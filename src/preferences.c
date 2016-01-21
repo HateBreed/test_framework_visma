@@ -15,8 +15,8 @@ gboolean add_user(user_preference* preference) {
 
 
 
-user_preference* load_preferences(gchar* username,gchar* password) {
-	if(!username || !password) return NULL;
+user_preference* load_preferences(gchar* username) {
+	if(!username) return NULL;
 	
 	user_preference* preferences = preference_initialize(username);
 	

@@ -15,7 +15,28 @@ gchar testpath[] = "tests/";
 int main(int argc, char *argv[]) {
 
 	user_preference* prefs = NULL;
-	if((prefs = load_preferences("john.doe@severa.com","password"))) {
+	
+	extern gchar *optarg;
+	extern gint optopt;
+	gint optc = -1;
+	gchar* user = NULL;
+	gchar* pass = NULL;
+	
+	// Check command line options
+	while ((optc = getopt(argc,argv,"u:")) != -1) {
+		switch (optc) {
+			case 'u':
+				user = optarg;
+				break;
+			default:
+				break;
+				
+		}
+	}
+	
+	if(!user || !pass) return 0;
+	
+	if((prefs = load_preferences(user))) {
 	
 		GSequenceIter* iter = g_sequence_get_iter_at_pos(prefs->tests,0);
 		testcase* test = (testcase*)g_sequence_get(iter);
