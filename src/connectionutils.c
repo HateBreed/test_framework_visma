@@ -51,8 +51,8 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 	
 	jsonreply* reply = g_new0(struct jsonreply_t,1);
 	
-	if(jsondata) g_print("Content (%ld):%s \n%s To: %s\n", jsondata->length, jsondata->data,method, url);
-	else g_print("Content (0))\n to %s\n",url);
+	if(g_strcmp0(method,"POST") != 0) g_print("Content (%ld):%s \n%s To: %s\n", jsondata->length, jsondata->data,method, url);
+	else g_print("Content (0))\n%s to %s\n",method,url);
 
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_URL, url);
