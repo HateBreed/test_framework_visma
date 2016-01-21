@@ -18,7 +18,7 @@ A testing framework made for Visma Solutions Oy as a pre-interview task
 make
 
 ## Running
-./testfw -u <username>
+./testfw -u [username]
 
 
 ## Approach
