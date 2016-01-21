@@ -13,7 +13,7 @@ debug:
 	$(COMPILER) $(COPTSD) $(LIBS) $(SOURCES) -o $(BINARY)
 
 run:
-	./$(BINARY)
+	./$(BINARY) -u john.doe@severa.com
 	
 leaktest:
 	G_DEBUG=gc-friendly G_SLICE=debug-blocks valgrind --leak-check=full ./$(BINARY) -u john.doe@severa.com
