@@ -132,40 +132,26 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 			
 				gchar *search_file = NULL;	
 				gchar *search_member = NULL;
-				gchar *value = NULL;
-				gboolean root_task = FALSE;	
+				gchar *search_root = NULL;
+				gboolean root_task = FALSE;
 				
 				// Get member to be replaced
 				gchar* member = (gchar*)g_slist_nth_data(tfile->required,regidx);
 				
-				// TODO rethink this
-				// If task guid is required, it can be gotten from root task of the case
-				if(g_strcmp0(member,"task_guid") == 0) {
-					root_task = TRUE;
-					search_member = g_strdup("guid");
-					search_file = g_strdup("0");
-				}
-				// If worktype guid is required it can be gotten from root task of the case
-				else if(g_strcmp0(member,"worktype_guid") == 0) {
-					root_task = TRUE;
-					search_member = g_strdup("default_worktype_guid");
-					search_file = g_strdup("0");
-				}
+				// Get the json holding the details for this parameter
+				jsonreply* info = (jsonreply*)g_slist_nth_data(tfile->reqinfo,regidx);
 				
-				// If user guid is required it can be gotten from the login info
-				else if(g_strcmp0(member,"user_guid") == 0) {
-					search_member = g_strdup(member);
-					search_file = g_strdup("login");
-				}
+				// Found json
+				if(info) {
 				
-				// Otherwise the parameter to be searched is the last string after "_"
-				// and details are in the case file
-				else {
-					gchar **search_members = g_strsplit(member,"_",3);
-					if(search_members[1]) search_member = g_strdup(search_members[1]);
-					g_strfreev(search_members);
-					search_file = g_strdup("0");
+					// Get path and method from file
+					search_file = get_value_of_member(info,"search_file",NULL);
+					search_member = get_value_of_member(info,"search_member",NULL);
+					search_root = get_value_of_member(info,"root_task",NULL);
+					if(search_root && g_strcmp0(search_root,"yes") == 0) root_task = TRUE;
 				}
+				// Move to next round
+				else continue;
 				
 				// Get the file
 				testfile* temp = (testfile*)g_hash_table_find(test->files,
@@ -179,11 +165,12 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 								
 					// Create new json using the "value" and save it
 					if(set_value_of_member(tfile->send, member, value)) {
-						g_print(" ");
+						g_debug("Replaced member %s value to %s\n",member,value);
 					}
+					g_free(value);
 				}
 				g_free(search_file);
-				g_free(value);
+				g_free(search_root);
 				g_free(search_member);
 				
 			}
