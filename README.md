@@ -72,10 +72,16 @@ Other minor challenges included the C coding in general, there might still be so
 
 I had in mind to build a server-client architecture for this framework using SCTP for communication and it will remain a question whether I have time to implement that. This would include listing existing tests, adding new with file upload. The new test would be added to preferences.json and files stored on server for future use. 
 
-The server-client would also enable using of timed tests with logging information sent to the email of the user. Timing of tasks would be easily done in Linux-environment on server side using cron. An entry would be added to cron to run a script, which would send a tailored system signal to the running server process to do a test of the user who requested timing of test. It would include sending the username and testname from the script. Sending of email could be done with curl, for instance, so no new libraries have to be included. The email would include either detailed information of the test or just a summary of potential errors.
+The server-client would also enable using of timed tests with logging information sent to the email of the user. Timing of tasks would be easily done in Linux-environment on server side using cron. An entry would be added to cron to run a script, which would send a tailored system signal to the running server process to do a test of the user who requested timing of test. It would include sending the username and testname from the script. Sending of email could be done with curl, for instance, so no new libraries have to be included. The email would include either detailed information of the test or just a summary of potential errors. Or if the server is not running there could be 
+
+## Compromises made
+
+No compromises, except that the user interface is lacking finesse. It is crude. A client-server paradigm would ease this that any language could be then used build a client for doing the tests while this code serves as a server.
 
 ## Open issues
 
 There are memory leaks. Some might be because of agile coding and hurry, others may be false positives reported by valgrind because glib utilizes memory slicing not well understood by valgrind.
 
 Error checking is lacking in many cases. Again, a symptom caused by agile coding and hurry.
+
+User interface is buggy.
