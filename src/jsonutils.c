@@ -122,6 +122,7 @@ gboolean set_value_of_member(jsonreply* jsondata, gchar* member, gchar* value) {
 		}
 		// End building
 		json_builder_end_object(builder);
+		g_object_unref(reader);
 
 		// Generate new json from the built data
 		JsonGenerator *generator = json_generator_new();
@@ -131,6 +132,7 @@ gboolean set_value_of_member(jsonreply* jsondata, gchar* member, gchar* value) {
 		g_free(jsondata->data);
 		jsondata->data = json_generator_to_data(generator,&(jsondata->length));
 		
+		g_strfreev(members);
 		g_object_unref(generator);
 		
 		g_object_unref(builder);

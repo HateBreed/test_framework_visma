@@ -109,6 +109,8 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		
 		// Create url
 		gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
+		
+		g_debug("Conducting test id \"%s\"\n",test->name);
 				
 		// First is login, it is always first in the list
 		if(testidx == 0) {
@@ -143,7 +145,7 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 				
 				// Found json
 				if(info) {
-				
+					g_debug("member %s info: %s\n",member,info->data);
 					// Get path and method from file
 					search_file = get_value_of_member(info,"search_file",NULL);
 					search_member = get_value_of_member(info,"search_member",NULL);
@@ -162,7 +164,7 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 				if(search_member) {
 					gchar* value = 
 						get_value_of_member(temp->recv,search_member, root_task ? "root_task" : NULL);
-								
+				
 					// Create new json using the "value" and save it
 					if(set_value_of_member(tfile->send, member, value)) {
 						g_debug("Replaced member %s value to %s\n",member,value);
