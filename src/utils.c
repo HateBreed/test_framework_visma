@@ -144,6 +144,7 @@ void free_testfile(gpointer data) {
 	g_slist_free_full(tfile->required,(GDestroyNotify)free_key);
 	g_slist_free_full(tfile->moreinfo,(GDestroyNotify)free_key);
 	
+	g_slist_free_full(tfile->reqinfo,(GDestroyNotify)free_jsonreply);
 	g_slist_free_full(tfile->infosend,(GDestroyNotify)free_jsonreply);
 	g_slist_free_full(tfile->inforecv,(GDestroyNotify)free_jsonreply);
 

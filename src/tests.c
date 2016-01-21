@@ -342,7 +342,31 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 		
 		// Requires information from other file
 		if(g_strcmp0(membstring,"{parent}") == 0) {
+		
+			// Add member name to list
 			tfile->required = g_slist_append(tfile->required,g_strdup(members[membidx]));
+			
+			JsonParser *parser = json_parser_new();
+			
+			// Create file offering more information
+			gchar* infopath = g_strjoin(".",filepath,"info",members[membidx],"json",NULL);
+			
+			if(load_json_from_file(parser,infopath)) {
+				JsonGenerator *generator = json_generator_new();
+				json_generator_set_root(generator, json_parser_get_root(parser));
+				
+				// Initialize struct for the new json and store json
+				jsonreply* info = jsonreply_initialize();
+				info->data = json_generator_to_data(generator,&(info->length));
+				
+				// To verify that this item is in correct position in the list 
+				// and corresponds to the member string location
+				gint add_position = g_slist_length(tfile->required) - 1;
+				tfile->reqinfo = g_slist_insert(tfile->reqinfo,info,add_position);
+
+				g_object_unref(generator);
+			}
+			g_object_unref(parser);
 		}
 		
 		// Requires more information from the server
