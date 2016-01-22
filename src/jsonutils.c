@@ -12,6 +12,18 @@ void set_integer_fields(GSList *intfields) {
 	integer_fields = intfields;
 }
 
+void print_check_init(const gchar* member, const gchar* value) {
+	g_print("Checking that \"%s\" is \"%s\" ",member,value);
+}
+
+void print_check_failure(const gchar* request, const gchar* response) {
+	if(!request  || !response) return;
+	g_print("[failure]\n\tValues differ: \n\t\trequest:\t%s\n\t\tresponse:\t%s\n",
+		request, response);
+}
+
+void print_check_ok() { g_print("[ok]\n"); }
+
 gboolean is_member_integer(const gchar* member) {
 
 	if(member && integer_fields) {
@@ -261,8 +273,7 @@ gboolean verify_in_array(JsonParser *parser, const gchar* check_value1, const gc
 						// If values do not match
 						if(g_strcmp0(value2,check_value2) != 0) {
 							success = FALSE;
-							g_print("\t.. failure.\n\"%s\" values \"%s\" and \"%s\" differ\n",
-								check_value1, check_value2, value2);
+							print_check_failure(check_value2, value2);
 						}
 					}
 				} // for
@@ -332,9 +343,9 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 					}
 					
 					// Check if the response contains same value as the value2 (formatted_value)
-					g_print("Checking that \"%s\" is \"%s\" .",value1,value2);
+					print_check_init(value1,value2);
 					test_ok = verify_in_array(res_parser,value1,value2);
-					if(test_ok) g_print("..ok.\n");
+					if(test_ok) print_check_ok();
 					
 					g_free(value1);
 					g_free(value2);
@@ -365,14 +376,13 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 				if(req_membstring && res_membstring) {
 				
 					// Check if they match
-					g_print("Checking that \"%s\" is \"%s\".",members[membidx],req_membstring);
+					print_check_init(members[membidx],req_membstring);
 					guint length = strlen(req_membstring);
 					if(g_ascii_strncasecmp(req_membstring,res_membstring,length) != 0) {
-						g_print(".failure\n\tValues differ: \n\t\trequest:\t%s\n\t\tresponse:\t%s\n",
-							req_membstring, res_membstring);
+						print_check_failure(req_membstring, res_membstring);
 						test_ok = FALSE;
 					}
-					else g_print("..ok\n");
+					else print_check_ok();
 				}
 				else {
 					g_print("Values for \"%s\" cannot be checked - value missing in response\n", members[membidx]);

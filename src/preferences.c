@@ -77,6 +77,7 @@ gboolean read_preferences(user_preference* preferences) {
 							test->intfields,
 							g_strdup(members[membidx]));
 					}
+					g_strfreev(members);
 					json_reader_end_element(reader);
 				}
 			}

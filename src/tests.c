@@ -150,9 +150,9 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 			if(tfile->send) {
 				g_print("Verifying test id \"%s\" (file: %s):\n",tfile->id,tfile->file);
 				if(verify_server_response(tfile->send,tfile->recv)) {
-					g_print ("Test added correctly\n");
+					g_print ("Test id \"%s\" was added correctly\n",tfile->id);
 				}
-				else g_print("Test was not added correctly\n");
+				else g_print("Test id \"%s\" was not added correctly\n", tfile->id);
 				g_print("\n\n");
 			}
 		}
