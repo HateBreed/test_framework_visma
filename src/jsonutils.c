@@ -58,7 +58,7 @@ gchar* get_json_member_integer(JsonReader *reader, const gchar* member) {
 		dval = json_reader_get_double_value(reader);
 	
 	json_reader_end_member(reader);
-	intval = g_strdup_printf("%0.4f\n",dval);
+	intval = g_strdup_printf("%0.4f",dval);
 	return intval;
 }
 
