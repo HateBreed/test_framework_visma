@@ -12,39 +12,39 @@ gchar* get_json_member_string(JsonReader *reader, const gchar* member) {
 	json_reader_end_member(reader);
 	return string;
 }
-gboolean load_json_from_file(JsonParser* parser, gchar* filepath) {
+gboolean load_json_from_file(JsonParser *parser, const gchar* filepath) {
 	if(!parser || !filepath) return FALSE;
 	
+	gboolean rval = FALSE;
+	
 	GError *error = NULL;
-	json_parser_load_from_file(parser, filepath, &error);
+	rval = json_parser_load_from_file(parser, filepath, &error);
 		
-	if (error) {
+	if (error && !rval) {
 		g_error ("Cannot parse file \"%s\". Reason: %s\n", filepath, error->message);
 		g_error_free(error);
-		//g_object_unref(parser);
-		return FALSE;
 	}
 	
-	return TRUE;
+	return rval;
 }
 
-gboolean load_json_from_data(JsonParser* parser, gchar* data, gssize length) {
+gboolean load_json_from_data(JsonParser* parser, const gchar* data, const gssize length) {
 	if(!parser || !data || length == 0) return FALSE;
-	
+
+	gboolean rval = FALSE;	
 	GError *error = NULL;
-	json_parser_load_from_data(parser, data, length, &error);
+	
+	rval = json_parser_load_from_data(parser, data, length, &error);
 		
 	if (error) {
 		g_error ("Cannot parse data. Reason: %s\n", error->message);
 		g_error_free(error);
-		//g_object_unref(parser);
-		return FALSE;
 	}
 	
-	return TRUE;
+	return rval;
 }
 
-gchar* get_value_of_member(jsonreply* jsondata, gchar* search, gchar* search2) {
+gchar* get_value_of_member(jsonreply* jsondata, const gchar* search, const gchar* search2) {
 	if(!jsondata || !search) return NULL;
 	
 	gchar* value = NULL;
@@ -90,7 +90,7 @@ gchar* get_value_of_member(jsonreply* jsondata, gchar* search, gchar* search2) {
 }
 
 // TODO use a hashtable to include all values to be changed
-gboolean set_value_of_member(jsonreply* jsondata, gchar* member, gchar* value) {
+gboolean set_value_of_member(jsonreply* jsondata, const gchar* member, const gchar* value) {
 	if(!jsondata || !member || !value) return FALSE;
 	
 	JsonParser *parser = json_parser_new();
@@ -144,7 +144,7 @@ gboolean set_value_of_member(jsonreply* jsondata, gchar* member, gchar* value) {
 	return TRUE;
 }
 
-jsonreply* create_delete_reply(gchar* member, gchar* value) {
+jsonreply* create_delete_reply(const gchar* member, const gchar* value) {
 	if(!value || !member) return NULL;
 	
 	// Storage for reply
@@ -175,7 +175,7 @@ jsonreply* create_delete_reply(gchar* member, gchar* value) {
 	return delreply;
 }
 
-gboolean verify_in_array(JsonParser *parser, gchar* check_value1, gchar* check_value2) {
+gboolean verify_in_array(JsonParser *parser, const gchar* check_value1, const gchar* check_value2) {
 	
 	if(!parser || !check_value1 || !check_value2) return FALSE;
 	

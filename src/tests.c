@@ -45,7 +45,9 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 
 	// Go through the test sequence
 	for(gint testidx = 0; testidx < g_slist_length(test_sequence); testidx++) {
-		
+#ifdef G_MESSAGES_DEBUG
+		getc(stdin);
+#endif
 		// Get the item in test sequence
 		gchar* searchparam = g_slist_nth_data(test_sequence,testidx);
 		
@@ -240,6 +242,9 @@ void tests_unload_tests(testcase* test,gchar* testpath) {
 	// Go through the sequence in reverse
 	for(gint testidx = g_slist_length(test_sequence) -1 ; testidx >= 0; testidx--) {
 
+#ifdef G_MESSAGES_DEBUG
+		getc(stdin);
+#endif
 		// First the login information need to be added, then tasks in number order
 		gchar* searchparam = g_slist_nth_data(test_sequence,testidx);
 		

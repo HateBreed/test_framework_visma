@@ -15,7 +15,7 @@ gboolean add_user(user_preference* preference) {
 
 
 
-user_preference* load_preferences(gchar* username) {
+user_preference* load_preferences(const gchar* username) {
 	if(!username) return NULL;
 	
 	user_preference* preferences = preference_initialize(username);
@@ -47,9 +47,13 @@ gboolean read_preferences(user_preference* preferences) {
 		{
 			json_reader_read_element(reader,testidx);
 			
-			testcase* test = testcase_initialize(
-				get_json_member_string(reader,"URL"),
-				get_json_member_string(reader,"testname"));
+			gchar *url = get_json_member_string(reader,"URL");
+			gchar *name = get_json_member_string(reader,"testname");
+			
+			testcase* test = testcase_initialize(url,name);
+			
+			g_free(url);
+			g_free(name);
 				
 			preference_add_test(preferences,test);
 				
@@ -63,11 +67,11 @@ gboolean read_preferences(user_preference* preferences) {
 					json_reader_read_element(reader,fileidx);
 					gboolean need_delete = FALSE;
 					
-					const gchar *id = get_json_member_string(reader,"id");
-					const gchar *file = get_json_member_string(reader,"file");
-					const gchar *path = get_json_member_string(reader,"path");
-					const gchar *method = get_json_member_string(reader,"method");
-					const gchar *delete = get_json_member_string(reader,"delete");
+					gchar *id = get_json_member_string(reader,"id");
+					gchar *file = get_json_member_string(reader,"file");
+					gchar *path = get_json_member_string(reader,"path");
+					gchar *method = get_json_member_string(reader,"method");
+					gchar *delete = get_json_member_string(reader,"delete");
 					
 					if(g_strcmp0(delete,"yes") == 0) need_delete = TRUE;
 					
@@ -79,6 +83,12 @@ gboolean read_preferences(user_preference* preferences) {
 							g_print("replaced old data in test %s\n", test->name);
 					}
 					json_reader_end_element(reader);
+					
+					g_free(id);
+					g_free(file);
+					g_free(path);
+					g_free(method);
+					g_free(delete);
 				}
 				g_print("\n");
 			}

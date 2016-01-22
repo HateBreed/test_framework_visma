@@ -6,9 +6,9 @@
 
 gboolean string_is_integer(const gchar* string);
 
-user_preference* preference_initialize(gchar* username);
+user_preference* preference_initialize(const gchar* username);
 gboolean preference_add_test(user_preference* preference, testcase* test);
-testcase* preference_get_test(user_preference* preference, gchar* testname);
+testcase* preference_get_test(user_preference* preference, const gchar* testname);
 gchar* preference_make_path(user_preference* preference);
 
 testcase* testcase_initialize(const gchar* URL, const gchar* name);
@@ -19,7 +19,7 @@ testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* p
 jsonreply* jsonreply_initialize();
 
 void free_all_preferences(gpointer data);
-gboolean free_preferences(GHashTable* userlist,gchar* username);
+gboolean free_preferences(GHashTable* userlist, const gchar* username);
 void free_testcase(gpointer testcase);
 void free_testfile(gpointer testfile);
 void free_jsonreply(gpointer data);

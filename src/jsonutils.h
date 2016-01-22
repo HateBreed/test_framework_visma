@@ -5,15 +5,15 @@
 
 gchar* get_json_member_string(JsonReader *reader, const gchar* member);
 
-gboolean load_json_from_file(JsonParser* parser, gchar* path);
+gboolean load_json_from_file(JsonParser* parser, const gchar* path);
 
-gboolean load_json_from_data(JsonParser* parser, gchar* data, gssize length);
+gboolean load_json_from_data(JsonParser* parser, const gchar* data, const gssize length);
 
-gchar* get_value_of_member(jsonreply* data, gchar* search, gchar* search2);
+gchar* get_value_of_member(jsonreply* data, const gchar* search, const gchar* search2);
 
-gboolean set_value_of_member(jsonreply* data, gchar* member, gchar* value);
+gboolean set_value_of_member(jsonreply* data, const gchar* member, const gchar* value);
 
-jsonreply* create_delete_reply(gchar* member, gchar* value);
+jsonreply* create_delete_reply(const gchar* member, const gchar* value);
 
 gboolean verify_server_response(jsonreply* request, jsonreply* response);
 

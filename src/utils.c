@@ -8,7 +8,7 @@ gboolean string_is_integer(const gchar* string) {
 	return TRUE;
 }
 
-user_preference* preference_initialize(gchar* username) {
+user_preference* preference_initialize(const gchar* username) {
 	if(!username) return NULL;
 	
 	user_preference* pref = g_new(struct user_preference_t,1);
@@ -25,7 +25,7 @@ gboolean preference_add_test(user_preference* preference, testcase* test) {
 	return TRUE;
 }
 
-testcase* preference_get_test(user_preference* preference, gchar* testname) {
+testcase* preference_get_test(user_preference* preference, const gchar* testname) {
 	if(!preference || !testname) return NULL;
 	GSequenceIter* iter = NULL;
 	for(iter = g_sequence_get_begin_iter(preference->tests);
@@ -94,7 +94,7 @@ void free_all_preferences(gpointer data) {
 	g_free(user_pref);
 }
 
-gboolean free_preferences(GHashTable* userlist, gchar* username) {
+gboolean free_preferences(GHashTable* userlist, const gchar* username) {
 	gpointer *user = NULL;
 
 	if(g_hash_table_lookup_extended(userlist,username,user,NULL)) {
