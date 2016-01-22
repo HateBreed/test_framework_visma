@@ -234,7 +234,8 @@ void tests_unload_tests(testcase* test,gchar* testpath) {
 	
 	jsonreply *deldata = NULL;
 	jsonreply *delresp = NULL;
-	gchar* url = NULL;
+	gchar *url = NULL;
+	gchar *value = NULL;
 	
 	// Go through the sequence in reverse
 	for(gint testidx = g_slist_length(test_sequence) -1 ; testidx >= 0; testidx--) {
@@ -252,37 +253,32 @@ void tests_unload_tests(testcase* test,gchar* testpath) {
 		
 			// First (here last) is login, it is always first in the list
 			if(testidx == 0) {
-				gchar *value = get_value_of_member(tfile->recv,"user_guid",NULL);
+				value = get_value_of_member(tfile->recv,"user_guid",NULL);
 
 				deldata = create_delete_reply("user_guid",value);
 			
 				if(deldata && value) {
 					url = g_strjoin("/",test->URL,"SignOut",value,NULL);
 					delresp = http_post(url,deldata,"GET");
-					g_free(value);
-					g_free(url);
-					free_jsonreply(delresp);
 				}
-				free_jsonreply(deldata);
-			
 			}
 		
 			// Rest in reverse order
 			else if(tfile->need_delete){
 				
-				gchar *value = get_value_of_member(tfile->recv,"guid",NULL);
+				value = get_value_of_member(tfile->recv,"guid",NULL);
 
 				if(value) {
 					deldata = create_delete_reply("guid",value);			
 					url = g_strjoin("/",test->URL,tfile->path,value,NULL);
 					delresp = http_post(url,deldata,"DELETE");
-					g_free(value);
-					g_free(url);
-					free_jsonreply(delresp);
-					free_jsonreply(deldata);
 					}
 			}
 		}
+		g_free(value);
+		g_free(url);
+		free_jsonreply(delresp);
+		free_jsonreply(deldata);
 	}
 	
 }

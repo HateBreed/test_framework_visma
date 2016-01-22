@@ -21,7 +21,7 @@ gboolean load_json_from_file(JsonParser* parser, gchar* filepath) {
 	if (error) {
 		g_error ("Cannot parse file \"%s\". Reason: %s\n", filepath, error->message);
 		g_error_free(error);
-		g_object_unref(parser);
+		//g_object_unref(parser);
 		return FALSE;
 	}
 	
@@ -37,7 +37,7 @@ gboolean load_json_from_data(JsonParser* parser, gchar* data, gssize length) {
 	if (error) {
 		g_error ("Cannot parse data. Reason: %s\n", error->message);
 		g_error_free(error);
-		g_object_unref(parser);
+		//g_object_unref(parser);
 		return FALSE;
 	}
 	
