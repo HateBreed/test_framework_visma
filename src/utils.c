@@ -167,10 +167,6 @@ void free_jsonreply(gpointer data) {
 
 void free_key(gpointer data) {
 	gchar* str = (gchar*)data;
-
-#ifdef G_MESSAGES_DEBUG
-	g_print("Freeing: %s\n", str);
-#endif
 	g_free(str);
 	
 }

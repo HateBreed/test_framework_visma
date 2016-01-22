@@ -45,11 +45,15 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 
 	// Go through the test sequence
 	for(gint testidx = 0; testidx < g_slist_length(test_sequence); testidx++) {
-#ifdef G_MESSAGES_DEBUG
-		getc(stdin);
-#endif
+
 		// Get the item in test sequence
 		gchar* searchparam = g_slist_nth_data(test_sequence,testidx);
+		
+#ifdef G_MESSAGES_DEBUG
+		g_print("Press enter to continue with test \"%s\" file id=\"%s\"",test->name,searchparam);
+		gchar c = '0';
+		while(c != '\n') c = getc(stdin);
+#endif
 		
 		// Get the data with the searchparameter from hash table
 		testfile* tfile = (testfile*)g_hash_table_find(test->files,
@@ -242,11 +246,14 @@ void tests_unload_tests(testcase* test,gchar* testpath) {
 	// Go through the sequence in reverse
 	for(gint testidx = g_slist_length(test_sequence) -1 ; testidx >= 0; testidx--) {
 
-#ifdef G_MESSAGES_DEBUG
-		getc(stdin);
-#endif
 		// First the login information need to be added, then tasks in number order
 		gchar* searchparam = g_slist_nth_data(test_sequence,testidx);
+		
+#ifdef G_MESSAGES_DEBUG
+		g_print("Press enter to DELETE test \"%s\" file id=\"%s\"",test->name,searchparam);
+		gchar c = '0';
+		while(c != '\n') c = getc(stdin);
+#endif
 		
 		// Get item in test sequence
 		testfile* tfile = (testfile*)g_hash_table_find(test->files,
@@ -277,7 +284,7 @@ void tests_unload_tests(testcase* test,gchar* testpath) {
 					deldata = create_delete_reply("guid",value);			
 					url = g_strjoin("/",test->URL,tfile->path,value,NULL);
 					delresp = http_post(url,deldata,"DELETE");
-					}
+				}
 			}
 		}
 		g_free(value);
