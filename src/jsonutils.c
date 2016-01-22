@@ -2,6 +2,15 @@
 #include "preferences.h"
 #include "connectionutils.h"
 
+gboolean is_member_integer(const gchar* member) {
+	gchar *list[5] = {"quantity","unit_price","unit_cost","hours",NULL};
+
+	for(gint index = 0; list[index]; index++)
+		if(g_strcmp0(member,list[index]) == 0) return TRUE;
+	
+	return FALSE;
+}
+
 gchar* get_json_member_string(JsonReader *reader, const gchar* member) {
 	if(!reader || !member) return NULL;
 	gchar* string = NULL;
@@ -13,6 +22,22 @@ gchar* get_json_member_string(JsonReader *reader, const gchar* member) {
 	json_reader_end_member(reader);
 	return string;
 }
+
+gchar* get_json_member_integer(JsonReader *reader, const gchar* member) {
+	if(!reader || !member) return 0;
+	gchar* intval = NULL;
+	gdouble dval = 0.0;
+	
+	// If a member was found, create a duplicate of string for returning
+	if(json_reader_read_member(reader,member))
+		//intval = json_reader_get_int_value(reader);
+		dval = json_reader_get_double_value(reader);
+	
+	json_reader_end_member(reader);
+	intval = g_strdup_printf("%0.4f\n",dval);
+	return intval;
+}
+
 gboolean load_json_from_file(JsonParser *parser, const gchar* filepath) {
 	if(!parser || !filepath) return FALSE;
 	
@@ -48,7 +73,7 @@ gboolean load_json_from_data(JsonParser* parser, const gchar* data, const gssize
 gchar* get_value_of_member(jsonreply* jsondata, const gchar* search, const gchar* search2) {
 	if(!jsondata || !search) return NULL;
 	
-	gchar* value = NULL;
+	gchar *value = NULL;
 	JsonParser *parser = json_parser_new();
 	
 	// Load json data
@@ -62,7 +87,8 @@ gchar* get_value_of_member(jsonreply* jsondata, const gchar* search, const gchar
 			if(json_reader_is_array(reader)) {
 				for(gint idx = 0; idx < json_reader_count_elements(reader); idx++) {
 					json_reader_read_element(reader,idx);
-					value = get_json_member_string(reader,search);
+					if(is_member_integer(search)) value = get_json_member_integer(reader,search);
+					else value = get_json_member_string(reader,search);
 					json_reader_end_element(reader);
 					if(value) break;
 				}
@@ -75,7 +101,8 @@ gchar* get_value_of_member(jsonreply* jsondata, const gchar* search, const gchar
 						g_debug(".. found\n");
 					}
 				}
-				value = get_json_member_string(reader,search);
+				if(is_member_integer(search)) value = get_json_member_integer(reader,search);
+				else value = get_json_member_string(reader,search);
 				if(search2) json_reader_end_member(reader);
 			}
 			// TODO check if is on other type
@@ -205,6 +232,7 @@ gboolean verify_in_array(JsonParser *parser, const gchar* check_value1, const gc
 				
 				for(gint membidx = 0; members[membidx] != NULL; membidx++) {
 				
+					// These values are always in string format according to REST API
 					// Title was found as identifier that this is correct element
 					if(g_strcmp0(members[membidx],"title") == 0) {
 						// This is correct element if the values of title is same as first input
@@ -221,7 +249,7 @@ gboolean verify_in_array(JsonParser *parser, const gchar* check_value1, const gc
 						// If values do not match
 						if(g_strcmp0(value2,check_value2) != 0) {
 							success = FALSE;
-							g_print(".. failure.\n\"%s\" values \"%s\" and \"%s\" differ\n",
+							g_print("\t.. failure.\n\"%s\" values \"%s\" and \"%s\" differ\n",
 								check_value1, check_value2, value2);
 						}
 					}
@@ -233,9 +261,9 @@ gboolean verify_in_array(JsonParser *parser, const gchar* check_value1, const gc
 				json_reader_end_element(reader);
 			} // for			
 		}
-		else g_debug("not array\n");
+		else g_print("Cannot verify: not an array.\n");
 	}
-	else g_debug("no data member\n");
+	else g_print("Cannot verify: no \"data\" member present in json.\n");
 	
 	json_reader_end_element(reader);
 	g_object_unref(reader);
@@ -245,11 +273,12 @@ gboolean verify_in_array(JsonParser *parser, const gchar* check_value1, const gc
 
 gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 
+	if(!request  || !response) return FALSE;
+
 	gboolean test_ok = TRUE;
 	gboolean array = FALSE;
 	JsonParser *req_parser = json_parser_new();
 	JsonParser *res_parser = json_parser_new();
-	
 	
 	// Load both jsons from memory
 	if(load_json_from_data(req_parser,request->data,request->length) &&
@@ -319,18 +348,22 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 				
 				// Get the corresponding value from the response
 				gchar* res_membstring = get_value_of_member(response,members[membidx],NULL);
-				
-				g_debug("value %s: %s\n",members[membidx], req_membstring);
-			
+						
 				// Both were found
 				if(req_membstring && res_membstring) {
 				
 					// Check if they match
-					if(g_strcmp0(req_membstring,res_membstring) != 0) {
-						g_print("Values of %s differ (request: %s - response: %s)\n",
-							members[membidx], req_membstring, res_membstring);
+					g_print("Checking that \"%s\" is \"%s\".",members[membidx],req_membstring);
+					guint length = strlen(req_membstring);
+					if(g_ascii_strncasecmp(req_membstring,res_membstring,length) != 0) {
+						g_print(".failure\n\tValues differ: \n\t\trequest:\t%s\n\t\tresponse:\t%s\n",
+							req_membstring, res_membstring);
 						test_ok = FALSE;
 					}
+					else g_print("..ok\n");
+				}
+				else {
+					g_print("Values for \"%s\" cannot be checked - value missing in response\n", members[membidx]);
 				}
 				
 				g_free(req_membstring);
@@ -340,6 +373,7 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 		}
 		g_object_unref(req_reader);
 	}
+	else test_ok = FALSE;
 	
 	g_object_unref(req_parser);
 	g_object_unref(res_parser);
@@ -349,6 +383,7 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 gboolean replace_required_member(GHashTable* filetable, testfile* tfile, gint index) {
 
 	if(!filetable || !tfile) return FALSE;
+	
 	gboolean rval = TRUE;
 	gchar *search_file = NULL;	
 	gchar *search_member = NULL;

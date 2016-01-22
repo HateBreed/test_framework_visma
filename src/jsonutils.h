@@ -5,6 +5,8 @@
 
 gchar* get_json_member_string(JsonReader *reader, const gchar* member);
 
+gchar* get_json_member_integer(JsonReader *reader, const gchar* member);
+
 gboolean load_json_from_file(JsonParser* parser, const gchar* path);
 
 gboolean load_json_from_data(JsonParser* parser, const gchar* data, const gssize length);

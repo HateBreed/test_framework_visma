@@ -125,7 +125,7 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		else if(testidx == 1) {
 			tfile->recv = http_post(url,tfile->send,tfile->method);
 			if(verify_server_response(tfile->send,tfile->recv)) {
-				g_print ("Case added correctly\n");
+				g_print ("Case added correctly\n\n\n");
 			}
 		}
 		
@@ -139,7 +139,6 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 			
 			// Go through the list of items requiring more info
 			for(gint index = 0; index < g_slist_length(tfile->moreinfo); index++) {
-			
 				replace_getinfo_member(tfile,index,test->URL);
 			}
 
@@ -151,6 +150,7 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 				if(verify_server_response(tfile->send,tfile->recv)) {
 					g_print ("Test added correctly\n");
 				}
+				else g_print("Test was not added correctly\n");
 				g_print("\n\n");
 			}
 		}
