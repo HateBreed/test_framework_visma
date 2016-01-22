@@ -71,6 +71,8 @@ int main(int argc, char *argv[]) {
 				g_ascii_digit_value(tnumber) <= idx &&
 				g_ascii_digit_value(tnumber) > 0) {
 				
+				set_parser(prefs->parser);
+				
 				GSequenceIter* testpos = g_sequence_get_iter_at_pos(prefs->tests,
 					g_ascii_digit_value(tnumber)-1);
 				testcase* test = (testcase*)g_sequence_get(testpos);

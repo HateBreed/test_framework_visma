@@ -4,6 +4,9 @@
 #include <string.h>
 #include "definitions.h"
 
+void set_parser(JsonParser *parser);
+JsonParser* get_parser();
+
 gboolean string_is_integer(const gchar* string);
 
 user_preference* preference_initialize(const gchar* username);

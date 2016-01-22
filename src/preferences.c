@@ -38,6 +38,8 @@ user_preference* load_preferences(const gchar* username) {
 
 gboolean read_preferences(user_preference* preferences) {
 
+	if(!preferences) return FALSE;
+	
 	gboolean rval = TRUE;
 	
 	JsonReader *reader = json_reader_new (json_parser_get_root (preferences->parser));

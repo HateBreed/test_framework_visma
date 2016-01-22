@@ -1,5 +1,16 @@
 #include "utils.h"
 
+static JsonParser* default_parser = NULL;
+
+void set_parser(JsonParser *parser) {
+	if(default_parser) g_object_unref(parser);
+	parser = default_parser;
+}
+
+JsonParser* get_parser() {
+	return default_parser;
+}
+
 gboolean string_is_integer(const gchar* string) {
 	gint length = strlen(string);
 	for(gint strindex = 0; strindex < length; strindex++) {

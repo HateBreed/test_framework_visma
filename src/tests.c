@@ -343,27 +343,28 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 			// Add member name to list
 			tfile->required = g_slist_append(tfile->required,g_strdup(members[membidx]));
 			
-			JsonParser *parser = json_parser_new();
+			JsonParser *par_parser = json_parser_new();
 			
 			// Create file offering more information
-			gchar* infopath = g_strjoin(".",filepath,"info",members[membidx],"json",NULL);
+			gchar* par_infopath = g_strjoin(".",filepath,"info",members[membidx],"json",NULL);
 			
-			if(load_json_from_file(parser,infopath)) {
-				JsonGenerator *generator = json_generator_new();
-				json_generator_set_root(generator, json_parser_get_root(parser));
+			if(load_json_from_file(par_parser,par_infopath)) {
+				JsonGenerator *par_generator = json_generator_new();
+				json_generator_set_root(par_generator, json_parser_get_root(par_parser));
 				
 				// Initialize struct for the new json and store json
 				jsonreply* info = jsonreply_initialize();
-				info->data = json_generator_to_data(generator,&(info->length));
+				info->data = json_generator_to_data(par_generator,&(info->length));
 				
 				// To verify that this item is in correct position in the list 
 				// and corresponds to the member string location
 				gint add_position = g_slist_length(tfile->required) - 1;
 				tfile->reqinfo = g_slist_insert(tfile->reqinfo,info,add_position);
 
-				g_object_unref(generator);
+				g_object_unref(par_generator);
 			}
-			g_object_unref(parser);
+			g_free(par_infopath);
+			g_object_unref(par_parser);
 		}
 		
 		// Requires more information from the server
@@ -372,28 +373,29 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 			// Add member name to list
 			tfile->moreinfo = g_slist_append(tfile->moreinfo,g_strdup(members[membidx]));
 			
-			JsonParser *infoparser = json_parser_new();
+			JsonParser *info_parser = json_parser_new();
 			
 			// Create path to the file offering more information
 			gchar* infopath = g_strjoin(".",filepath,"getinfo",members[membidx],"json",NULL);
 			
 			// Load the json file
-			if(load_json_from_file(infoparser,infopath)) {
-				JsonGenerator *generator = json_generator_new();
-				json_generator_set_root(generator, json_parser_get_root(infoparser));
+			if(load_json_from_file(info_parser,infopath)) {
+				JsonGenerator *info_generator = json_generator_new();
+				json_generator_set_root(info_generator, json_parser_get_root(info_parser));
 				
 				// Initialize struct for the new json and store json
 				jsonreply* info = jsonreply_initialize();
-				info->data = json_generator_to_data(generator,&(info->length));
+				info->data = json_generator_to_data(info_generator,&(info->length));
 				
 				// To verify that this item is in correct position in the list 
 				// and corresponds to the member string location
 				gint add_position = g_slist_length(tfile->moreinfo) - 1;
 				tfile->infosend = g_slist_insert(tfile->infosend,info,add_position);
 
-				g_object_unref(generator);
+				g_object_unref(info_generator);
 			}
-			g_object_unref(infoparser);
+			g_free(infopath);
+			g_object_unref(info_parser);
 		}
 		g_free(membstring);
 	}

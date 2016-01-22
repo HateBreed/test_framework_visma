@@ -16,7 +16,7 @@ run:
 	./$(BINARY) -u john.doe@severa.com
 	
 leaktest:
-	G_DEBUG=gc-friendly G_SLICE=debug-blocks valgrind --leak-check=full ./$(BINARY) -u john.doe@severa.com
+	G_DEBUG=resident-modules G_SLICE=debug-blocks valgrind --leak-check=full ./$(BINARY) -u john.doe@severa.com
 
 all:
 	compile
