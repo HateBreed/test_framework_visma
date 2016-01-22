@@ -136,7 +136,7 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		
 		// From third start the tests, here the required fields are checked and replaced
 		else {
-			for(gint regidx = 0; regidx < g_slist_length(tfile->required); regidx++) {
+			for(gint reqidx = 0; reqidx < g_slist_length(tfile->required); reqidx++) {
 			
 				gchar *search_file = NULL;	
 				gchar *search_member = NULL;
@@ -144,14 +144,14 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 				gboolean root_task = FALSE;
 				
 				// Get member to be replaced
-				gchar* member = (gchar*)g_slist_nth_data(tfile->required,regidx);
+				const gchar* req_member = (gchar*)g_slist_nth_data(tfile->required,reqidx);
 				
 				// Get the json holding the details for this parameter
-				jsonreply* info = (jsonreply*)g_slist_nth_data(tfile->reqinfo,regidx);
+				jsonreply* info = (jsonreply*)g_slist_nth_data(tfile->reqinfo,reqidx);
 				
 				// Found json
 				if(info) {
-					g_debug("member %s info: %s\n",member,info->data);
+					g_debug("member %s info: %s\n",req_member,info->data);
 					// Get path and method from file
 					search_file = get_value_of_member(info,"search_file",NULL);
 					search_member = get_value_of_member(info,"search_member",NULL);
@@ -172,22 +172,21 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 						get_value_of_member(temp->recv,search_member, root_task ? "root_task" : NULL);
 				
 					// Create new json using the "value" and save it
-					if(set_value_of_member(tfile->send, member, value)) {
-						g_debug("Replaced member %s value to %s\n",member,value);
+					if(set_value_of_member(tfile->send, req_member, value)) {
+						g_debug("Replaced member %s value to %s\n",req_member,value);
 					}
 					g_free(value);
 				}
 				g_free(search_file);
 				g_free(search_root);
 				g_free(search_member);
-				
 			}
 			
 			// Go through the list of items requiring more info
 			for(gint moreidx = 0; moreidx < g_slist_length(tfile->moreinfo); moreidx++) {
 			
 				// Get member to be replaced
-				gchar* member = (gchar*)g_slist_nth_data(tfile->moreinfo,moreidx);
+				const gchar* info_member = (gchar*)g_slist_nth_data(tfile->moreinfo,moreidx);
 				
 				// Get the json holding the details for this parameter
 				jsonreply* infosend = (jsonreply*)g_slist_nth_data(tfile->infosend,moreidx);
@@ -208,7 +207,7 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 					
 					// Search the value and replace it
 					gchar* value = get_value_of_member(inforecv,"guid",NULL);
-					if(value) set_value_of_member(tfile->send,member,value);
+					if(value) set_value_of_member(tfile->send,info_member,value);
 					
 					// Add result to list
 					tfile->inforecv = g_slist_append(tfile->inforecv,inforecv);
