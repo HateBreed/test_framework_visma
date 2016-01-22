@@ -22,6 +22,10 @@ void print_check_failure(const gchar* request, const gchar* response) {
 		request, response);
 }
 
+void print_check_missing(const gchar* member) {
+	print_check_failure(member,"null");
+}
+
 void print_check_ok() { g_print("[ok]\n"); }
 
 gboolean is_member_integer(const gchar* member) {
@@ -372,21 +376,21 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 				// Get the corresponding value from the response
 				gchar* res_membstring = get_value_of_member(response,members[membidx],NULL);
 						
-				// Both were found
-				if(req_membstring && res_membstring) {
-				
-					// Check if they match
-					print_check_init(members[membidx],req_membstring);
+				print_check_init(members[membidx],req_membstring);
+				// Response was found
+				if(res_membstring) {
+					// Length of the request
 					guint length = strlen(req_membstring);
+					
+					// Check if they match by comparing only the amount of characters
+					// the request value contains
 					if(g_ascii_strncasecmp(req_membstring,res_membstring,length) != 0) {
 						print_check_failure(req_membstring, res_membstring);
 						test_ok = FALSE;
 					}
 					else print_check_ok();
 				}
-				else {
-					g_print("Values for \"%s\" cannot be checked - value missing in response\n", members[membidx]);
-				}
+				else print_check_missing(members[membidx]);
 				
 				g_free(req_membstring);
 				g_free(res_membstring);
