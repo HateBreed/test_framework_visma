@@ -131,47 +131,16 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		
 		// From third start the tests, here the required fields are checked and replaced
 		else {
+			gint index = 0;
 			// Go through all fields having {parent} as value
-			for(gint reqidx = 0; reqidx < g_slist_length(tfile->required); reqidx++) {
-			
-				replace_required_member(test->files,tfile,reqidx);
+			for(index = 0; index < g_slist_length(tfile->required); index++) {
+				replace_required_member(test->files,tfile,index);
 			}
 			
 			// Go through the list of items requiring more info
-			for(gint moreidx = 0; moreidx < g_slist_length(tfile->moreinfo); moreidx++) {
+			for(gint index = 0; index < g_slist_length(tfile->moreinfo); index++) {
 			
-				// Get member to be replaced
-				const gchar* info_member = (gchar*)g_slist_nth_data(tfile->moreinfo,moreidx);
-				
-				// Get the json holding the details for this parameter
-				jsonreply* infosend = (jsonreply*)g_slist_nth_data(tfile->infosend,moreidx);
-				jsonreply* inforecv = NULL;
-				
-				// Found json
-				if(infosend) {
-				
-					// Get path and method from file
-					gchar* infopath = get_value_of_member(infosend,"path",NULL);
-					gchar* method = get_value_of_member(infosend,"method",NULL);
-					
-					// Construct url
-					gchar* infourl = g_strjoin("/",test->URL,infopath,NULL);
-									
-					// Send an empty json to server to retrieve information
-					inforecv = http_post(infourl,NULL,method);
-					
-					// Search the value and replace it
-					gchar* value = get_value_of_member(inforecv,"guid",NULL);
-					if(value) set_value_of_member(tfile->send,info_member,value);
-					
-					// Add result to list
-					tfile->inforecv = g_slist_append(tfile->inforecv,inforecv);
-					
-					g_free(infopath);
-					g_free(method);
-					g_free(infourl);
-					g_free(value);
-				}
+				replace_getinfo_member(tfile,index,test->URL);
 			}
 
 			tfile->recv = http_post(url,tfile->send,tfile->method);

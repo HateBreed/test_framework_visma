@@ -19,4 +19,6 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response);
 
 gboolean replace_required_member(GHashTable* filetable, testfile* tfile, gint index);
 
+gboolean replace_getinfo_member(testfile* tfile, gint index, const gchar* url);
+
 #endif

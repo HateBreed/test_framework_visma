@@ -1,5 +1,6 @@
 #include "jsonutils.h"
 #include "preferences.h"
+#include "connectionutils.h"
 
 gchar* get_json_member_string(JsonReader *reader, const gchar* member) {
 	if(!reader || !member) return NULL;
@@ -347,6 +348,7 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 
 gboolean replace_required_member(GHashTable* filetable, testfile* tfile, gint index) {
 
+	if(!filetable || !tfile) return FALSE;
 	gboolean rval = TRUE;
 	gchar *search_file = NULL;	
 	gchar *search_member = NULL;
@@ -354,7 +356,7 @@ gboolean replace_required_member(GHashTable* filetable, testfile* tfile, gint in
 	gboolean root_task = FALSE;
 	
 	// Get member to be replaced
-	const gchar* req_member = (gchar*)g_slist_nth_data(tfile->required,index);
+	const gchar* member = (gchar*)g_slist_nth_data(tfile->required,index);
 	
 	// Get the json holding the details for this parameter
 	jsonreply* info = (jsonreply*)g_slist_nth_data(tfile->reqinfo,index);
@@ -362,7 +364,7 @@ gboolean replace_required_member(GHashTable* filetable, testfile* tfile, gint in
 	// Found json
 	if(info) {
 #ifdef G_MESSAGES_DEBUG
-		g_print("member %s info: %s\n",req_member,info->data);
+		g_print("member %s info: %s\n",member,info->data);
 #endif
 		
 		// Get path and method from file
@@ -384,9 +386,9 @@ gboolean replace_required_member(GHashTable* filetable, testfile* tfile, gint in
 				root_task ? "root_task" : NULL);
 	
 			// Create new json using the "value" and save it
-			if(new_value && set_value_of_member(tfile->send, req_member, new_value)) {
+			if(new_value && set_value_of_member(tfile->send, member, new_value)) {
 #ifdef G_MESSAGES_DEBUG
-				g_print("Replaced member %s value to %s\n",req_member,new_value);
+				g_print("Replaced member %s value to %s\n",member,new_value);
 #endif
 				rval = TRUE;
 			}
@@ -400,5 +402,51 @@ gboolean replace_required_member(GHashTable* filetable, testfile* tfile, gint in
 	g_free(search_root);
 	g_free(search_member);
 	
+	return rval;
+}
+
+gboolean replace_getinfo_member(testfile* tfile, gint index, const gchar* url) {
+
+	if(!tfile  || !url) return FALSE;
+	
+	gboolean rval = TRUE;
+	// Get member to be replaced
+	const gchar* member = (gchar*)g_slist_nth_data(tfile->moreinfo,index);
+	
+	// Get the json holding the details for this parameter
+	jsonreply* infosend = (jsonreply*)g_slist_nth_data(tfile->infosend,index);
+	jsonreply* inforecv = NULL;
+	
+	// Found json
+	if(infosend) {
+	
+		// Get path and method from file
+		gchar* infopath = get_value_of_member(infosend,"path",NULL);
+		gchar* method = get_value_of_member(infosend,"method",NULL);
+		
+		// Construct url
+		gchar* infourl = g_strjoin("/",url,infopath,NULL);
+						
+		// Send an empty json to server to retrieve information
+		inforecv = http_post(infourl,NULL,method);
+		
+		// Search the value and replace it
+		gchar* value = get_value_of_member(inforecv,"guid",NULL);
+		if(value && set_value_of_member(tfile->send,member,value)) {
+#ifdef G_MESSAGES_DEBUG
+				g_print("Replaced member %s value to %s\n",member,value);
+#endif
+			rval = TRUE;
+		}
+		
+		// Add result to list
+		tfile->inforecv = g_slist_append(tfile->inforecv,inforecv);
+		
+		g_free(infopath);
+		g_free(method);
+		g_free(infourl);
+		g_free(value);
+	}
+	else rval = FALSE;
 	return rval;
 }
