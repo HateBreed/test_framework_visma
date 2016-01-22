@@ -3,6 +3,7 @@
 	{
 		"testname": "test1",
 		"URL": "https://sync-test.severa.com/webservice/s3/rest/mobile",
+		"encoding": "UTF-8",
 		"integerfields":
 		[
 			{

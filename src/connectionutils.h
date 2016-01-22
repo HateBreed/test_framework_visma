@@ -4,7 +4,7 @@
 #include <curl/curl.h>
 #include "definitions.h"
 
-void http_init();
+void http_init(gchar* encoding);
 void http_close();
 void set_token(gchar* new_token);
 

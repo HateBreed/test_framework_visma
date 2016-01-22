@@ -390,7 +390,7 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 					}
 					else print_check_ok();
 				}
-				else print_check_missing(members[membidx]);
+				else print_check_missing(req_membstring);
 				
 				g_free(req_membstring);
 				g_free(res_membstring);

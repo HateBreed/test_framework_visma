@@ -54,11 +54,13 @@ gboolean read_preferences(user_preference* preferences) {
 			
 			gchar *url = get_json_member_string(reader,"URL");
 			gchar *name = get_json_member_string(reader,"testname");
+			gchar *encoding = get_json_member_string(reader,"encoding");
 			
-			testcase* test = testcase_initialize(url,name);
+			testcase* test = testcase_initialize(url,name,encoding);
 			
 			g_free(url);
 			g_free(name);
+			g_free(encoding);
 				
 			preference_add_test(preferences,test);
 				

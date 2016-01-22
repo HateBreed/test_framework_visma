@@ -20,6 +20,7 @@ typedef struct user_preference_t {
 typedef struct testcase_t {
 	gchar *URL; // REST API URL
 	gchar *name; // Name of the test
+	gchar *encoding; // Encoding of the server
 	GHashTable *files; // Hash table containing all testfile_t structures
 	GSList *intfields; // List of fieldnames that have integers
 } testcase ;

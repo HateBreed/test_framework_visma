@@ -53,11 +53,12 @@ testcase* preference_get_test(user_preference* preference, const gchar* testname
 	return NULL;
 }
 
-testcase* testcase_initialize(const gchar* URL, const gchar* name) {
-	if(!URL || !name) return NULL;
+testcase* testcase_initialize(const gchar* url, const gchar* testname, const gchar* enc) {
+	if(!url || !testname) return NULL;
 	testcase* test = g_new0(struct testcase_t,1);
-	test->URL = g_strdup(URL);
-	test->name = g_strdup(name);
+	test->URL = g_strdup(url);
+	test->name = g_strdup(testname);
+	test->encoding = g_strdup(enc);
 	test->files = g_hash_table_new_full(
 		(GHashFunc)g_str_hash,
 		(GEqualFunc)g_str_equal,

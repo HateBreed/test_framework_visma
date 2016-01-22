@@ -17,7 +17,7 @@ void tests_destroy() {
 
 gboolean tests_run_test(gchar* username, testcase* test) {
 
-	http_init();
+	http_init(test->encoding);
 	gchar* testpath = tests_make_path_for_test(username,test);
 
 	// Check which fields from the case creation reply have to be stored for future use
