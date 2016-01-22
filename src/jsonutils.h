@@ -3,6 +3,8 @@
 
 #include "definitions.h"
 
+void set_integer_fields(GSList *intfields);
+
 gchar* get_json_member_string(JsonReader *reader, const gchar* member);
 
 gchar* get_json_member_integer(JsonReader *reader, const gchar* member);

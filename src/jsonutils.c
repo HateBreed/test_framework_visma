@@ -2,12 +2,24 @@
 #include "preferences.h"
 #include "connectionutils.h"
 
-gboolean is_member_integer(const gchar* member) {
-	gchar *list[5] = {"quantity","unit_price","unit_cost","hours",NULL};
+GSList *integer_fields = NULL;
 
-	for(gint index = 0; list[index]; index++)
-		if(g_strcmp0(member,list[index]) == 0) return TRUE;
-	
+/**
+* Set the integer field list (set a pointer, nothing more)
+*@param new integer field list
+*/
+void set_integer_fields(GSList *intfields) {
+	integer_fields = intfields;
+}
+
+gboolean is_member_integer(const gchar* member) {
+
+	if(member && integer_fields) {
+		for(gint index = 0; index < g_slist_length(integer_fields); index++) {
+			if(g_strcmp0(member,(gchar*)g_slist_nth_data(integer_fields,index)) == 0)
+				return TRUE;
+		}
+	}
 	return FALSE;
 }
 

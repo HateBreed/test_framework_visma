@@ -63,7 +63,7 @@ testcase* testcase_initialize(const gchar* URL, const gchar* name) {
 		(GEqualFunc)g_str_equal,
 		(GDestroyNotify)free_key,
 		(GDestroyNotify)free_testfile);
-		
+	test->intfields = NULL;	
 	return test;
 }
 
@@ -149,6 +149,7 @@ void free_testcase(gpointer data) {
 		g_hash_table_destroy(test->files);
 		test->files = NULL;
 	}
+	g_slist_free_full(test->intfields,(GDestroyNotify)free_key);
 	g_free(test);
 }
 

@@ -18,14 +18,15 @@ typedef struct user_preference_t {
 } user_preference;
 
 typedef struct testcase_t {
-	gchar *URL;
-	gchar *name;
-	GHashTable *files;
+	gchar *URL; // REST API URL
+	gchar *name; // Name of the test
+	GHashTable *files; // Hash table containing all testfile_t structures
+	GSList *intfields; // List of fieldnames that have integers
 } testcase ;
 
 typedef struct jsonreply_t {
-  	gchar *data;
-  	gsize length;
+  	gchar *data; // Json as char data
+  	gsize length; // Lenght of the char data
 } jsonreply;
 
 typedef struct testfile_t {

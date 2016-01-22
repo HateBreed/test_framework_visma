@@ -3,6 +3,15 @@
 	{
 		"testname": "test1",
 		"URL": "https://sync-test.severa.com/webservice/s3/rest/mobile",
+		"integerfields":
+		[
+			{
+				"quantity": "",
+				"unit_price": "",
+				"unit_cost": "",
+				"hours": ""
+			}
+		],
 		"files": 
 		[
 			{

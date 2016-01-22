@@ -26,6 +26,8 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 	// Create the sequence of sending tests (json files as charstring data)
 	tests_build_test_sequence(test);
 	
+	set_integer_fields(test->intfields);
+	
 	tests_conduct_tests(test,testpath);
 	
 	tests_unload_tests(test,testpath);

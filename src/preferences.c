@@ -41,6 +41,7 @@ gboolean read_preferences(user_preference* preferences) {
 	if(!preferences) return FALSE;
 	
 	gboolean rval = TRUE;
+	gint fileidx = 0;
 	
 	JsonReader *reader = json_reader_new (json_parser_get_root (preferences->parser));
 
@@ -63,11 +64,31 @@ gboolean read_preferences(user_preference* preferences) {
 				
 			//g_print("Test \"%s\" URL = %s\n",test->name,test->URL);
 			
+			json_reader_read_member(reader,"integerfields");
+			
+			if(json_reader_is_array(reader)) {
+				for(fileidx = 0; fileidx < json_reader_count_elements(reader); fileidx++) {
+					json_reader_read_element(reader,fileidx);
+					
+					gchar** members = json_reader_list_members(reader);
+					
+					for(gint membidx = 0; members[membidx] != NULL; membidx++) {
+						test->intfields = g_slist_append(
+							test->intfields,
+							g_strdup(members[membidx]));
+					}
+					json_reader_end_element(reader);
+				}
+			}
+			else g_print("Cannot read integer field list, \"integerfields\" is not an array\n");
+			
+			json_reader_end_member(reader);
+			
 			json_reader_read_member(reader,"files");
 			
 			if(json_reader_is_array(reader)) {
 				//g_print("%d files:\n",json_reader_count_elements(reader));
-				for(gint fileidx = 0; fileidx < json_reader_count_elements(reader); fileidx++) {
+				for(fileidx = 0; fileidx < json_reader_count_elements(reader); fileidx++) {
 					json_reader_read_element(reader,fileidx);
 					gboolean need_delete = FALSE;
 					
@@ -96,6 +117,7 @@ gboolean read_preferences(user_preference* preferences) {
 				}
 				g_print("\n");
 			}
+			else g_print("Cannot read file list, \"files\" is not an array\n");
 			
 			json_reader_end_member(reader); // files
 
