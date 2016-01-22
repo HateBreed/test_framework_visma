@@ -93,6 +93,8 @@ gchar* get_value_of_member(jsonreply* jsondata, const gchar* search, const gchar
 gboolean set_value_of_member(jsonreply* jsondata, const gchar* member, const gchar* value) {
 	if(!jsondata || !member || !value) return FALSE;
 	
+	gboolean rval = TRUE;
+	
 	JsonParser *parser = json_parser_new();
 	
 	// Load existing data
@@ -137,11 +139,11 @@ gboolean set_value_of_member(jsonreply* jsondata, const gchar* member, const gch
 		
 		g_object_unref(builder);
 	}
-	else return FALSE;
+	else rval = FALSE;
 	
 	g_object_unref(parser);
 	
-	return TRUE;
+	return rval;
 }
 
 jsonreply* create_delete_reply(const gchar* member, const gchar* value) {
@@ -341,4 +343,62 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 	g_object_unref(req_parser);
 	g_object_unref(res_parser);
 	return test_ok;
+}
+
+gboolean replace_required_member(GHashTable* filetable, testfile* tfile, gint index) {
+
+	gboolean rval = TRUE;
+	gchar *search_file = NULL;	
+	gchar *search_member = NULL;
+	gchar *search_root = NULL;
+	gboolean root_task = FALSE;
+	
+	// Get member to be replaced
+	const gchar* req_member = (gchar*)g_slist_nth_data(tfile->required,index);
+	
+	// Get the json holding the details for this parameter
+	jsonreply* info = (jsonreply*)g_slist_nth_data(tfile->reqinfo,index);
+	
+	// Found json
+	if(info) {
+#ifdef G_MESSAGES_DEBUG
+		g_print("member %s info: %s\n",req_member,info->data);
+#endif
+		
+		// Get path and method from file
+		search_file = get_value_of_member(info,"search_file",NULL);
+		search_member = get_value_of_member(info,"search_member",NULL);
+		search_root = get_value_of_member(info,"root_task",NULL);
+		if(search_root && g_strcmp0(search_root,"yes") == 0) root_task = TRUE;
+		
+		// Get the file
+		testfile* req_file = (testfile*)g_hash_table_find(filetable,
+			(GHRFunc)find_from_hash_table, 
+			search_file);
+
+		// Something to search for?
+		if(search_member) {
+			gchar* new_value = get_value_of_member(
+				req_file->recv,
+				search_member,
+				root_task ? "root_task" : NULL);
+	
+			// Create new json using the "value" and save it
+			if(new_value && set_value_of_member(tfile->send, req_member, new_value)) {
+#ifdef G_MESSAGES_DEBUG
+				g_print("Replaced member %s value to %s\n",req_member,new_value);
+#endif
+				rval = TRUE;
+			}
+		g_free(new_value);
+		}
+	}
+	else rval = FALSE;
+	
+	
+	g_free(search_file);
+	g_free(search_root);
+	g_free(search_member);
+	
+	return rval;
 }

@@ -8,6 +8,7 @@ void set_parser(JsonParser *parser);
 JsonParser* get_parser();
 
 gboolean string_is_integer(const gchar* string);
+gboolean find_from_hash_table(gpointer key, gpointer value, gpointer user_data);
 
 user_preference* preference_initialize(const gchar* username);
 gboolean preference_add_test(user_preference* preference, testcase* test);

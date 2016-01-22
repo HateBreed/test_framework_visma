@@ -7,11 +7,6 @@ void print_hashtable_strings(gpointer key, gpointer value, gpointer userdata) {
 	g_print("\"%s\":\"%s\"\n",(gchar*)key, (gchar*)value);
 }
 
-gboolean find_from_hash_table(gpointer key, gpointer value, gpointer user_data) {
-	if(!key || !user_data) return FALSE;
-	return g_strcmp0((gchar*)key,(gchar*)user_data) == 0 ? TRUE : FALSE;
-}
-
 void tests_initialize() {
 
 }
@@ -136,50 +131,10 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 		
 		// From third start the tests, here the required fields are checked and replaced
 		else {
+			// Go through all fields having {parent} as value
 			for(gint reqidx = 0; reqidx < g_slist_length(tfile->required); reqidx++) {
 			
-				gchar *search_file = NULL;	
-				gchar *search_member = NULL;
-				gchar *search_root = NULL;
-				gboolean root_task = FALSE;
-				
-				// Get member to be replaced
-				const gchar* req_member = (gchar*)g_slist_nth_data(tfile->required,reqidx);
-				
-				// Get the json holding the details for this parameter
-				jsonreply* info = (jsonreply*)g_slist_nth_data(tfile->reqinfo,reqidx);
-				
-				// Found json
-				if(info) {
-					g_debug("member %s info: %s\n",req_member,info->data);
-					// Get path and method from file
-					search_file = get_value_of_member(info,"search_file",NULL);
-					search_member = get_value_of_member(info,"search_member",NULL);
-					search_root = get_value_of_member(info,"root_task",NULL);
-					if(search_root && g_strcmp0(search_root,"yes") == 0) root_task = TRUE;
-				}
-				// Move to next round
-				else continue;
-				
-				// Get the file
-				testfile* temp = (testfile*)g_hash_table_find(test->files,
-					(GHRFunc)find_from_hash_table, 
-					search_file);
-
-				// Something to search for?
-				if(search_member) {
-					gchar* value = 
-						get_value_of_member(temp->recv,search_member, root_task ? "root_task" : NULL);
-				
-					// Create new json using the "value" and save it
-					if(set_value_of_member(tfile->send, req_member, value)) {
-						g_debug("Replaced member %s value to %s\n",req_member,value);
-					}
-					g_free(value);
-				}
-				g_free(search_file);
-				g_free(search_root);
-				g_free(search_member);
+				replace_required_member(test->files,tfile,reqidx);
 			}
 			
 			// Go through the list of items requiring more info

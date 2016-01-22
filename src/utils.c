@@ -19,6 +19,11 @@ gboolean string_is_integer(const gchar* string) {
 	return TRUE;
 }
 
+gboolean find_from_hash_table(gpointer key, gpointer value, gpointer user_data) {
+	if(!key || !user_data) return FALSE;
+	return g_strcmp0((gchar*)key,(gchar*)user_data) == 0 ? TRUE : FALSE;
+}
+
 user_preference* preference_initialize(const gchar* username) {
 	if(!username) return NULL;
 	
