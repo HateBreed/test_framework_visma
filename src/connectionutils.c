@@ -8,10 +8,14 @@ gchar* token = NULL;
 
 void http_init() {
 	token = NULL;
+	curl_global_init(CURL_GLOBAL_ALL);
+	if(!curl) curl = curl_easy_init();
 }
 
 void http_close() {
 	g_free(token);
+	if(curl) curl_easy_cleanup(curl);
+	curl_global_cleanup();
 }
 
 void set_token(gchar* new_token) {
@@ -29,7 +33,7 @@ static gsize http_get_json_reply_callback(gchar* contents, gsize size, gsize nme
 	if(reply->data == NULL) {
 		g_error("not enough memory (realloc returned NULL)\n");
 		return 0;
-  }
+	}
  
 	memcpy(&(reply->data[reply->length]), contents, realsize);
 	reply->length += realsize;
@@ -45,8 +49,7 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 	struct curl_slist *headers = NULL;
 	
 	if(!url || !method) return NULL;
-	curl_global_init(CURL_GLOBAL_ALL);
-	curl = curl_easy_init();
+	if(!curl) http_init();
 	
 	jsonreply* reply = g_new0(struct jsonreply_t,1);
 	
@@ -79,9 +82,8 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 			g_print("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 			
 		curl_slist_free_all(headers);
-		curl_easy_cleanup(curl);
 	}
 	g_debug("Reply (%ld):%s \n\n", reply->length, reply->data);
-	curl_global_cleanup();
+	
 	return reply;
 }
