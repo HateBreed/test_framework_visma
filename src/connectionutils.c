@@ -52,9 +52,11 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 	if(!curl) http_init();
 	
 	jsonreply* reply = g_new0(struct jsonreply_t,1);
-	
-	if(g_strcmp0(method,"POST") == 0) g_debug("Content (%ld):%s \n%s To: %s\n", jsondata->length, jsondata->data,method, url);
-	else g_debug("Content (0)\n%s to %s\n",method,url);
+
+#ifdef G_MESSAGES_DEBUG
+	if(g_strcmp0(method,"POST") == 0) g_print("Content (%ld):%s \n%s To: %s\n", jsondata->length, jsondata->data,method, url);
+	else g_print("Content (0)\n%s to %s\n",method,url);
+#endif
 
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -83,7 +85,9 @@ jsonreply* http_post(gchar* url, jsonreply* jsondata, gchar* method) {
 			
 		curl_slist_free_all(headers);
 	}
-	g_debug("Reply (%ld):%s \n\n", reply->length, reply->data);
+#ifdef G_MESSAGES_DEBUG
+	g_print("Reply (%ld):%s \n\n", reply->length, reply->data);
+#endif
 	
 	return reply;
 }

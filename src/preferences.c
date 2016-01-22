@@ -3,6 +3,10 @@
 
 static GHashTable* userlist = NULL;
 
+/**
+* Adds user to userlist 
+* @param preference 
+*/
 gboolean add_user(user_preference* preference) {
 	if(!userlist) userlist = g_hash_table_new_full(
 		(GHashFunc)g_str_hash,
@@ -12,8 +16,6 @@ gboolean add_user(user_preference* preference) {
 		
 	return g_hash_table_insert(userlist, g_strdup(preference->username),preference);
 }
-
-
 
 user_preference* load_preferences(const gchar* username) {
 	if(!username) return NULL;

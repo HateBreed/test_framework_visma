@@ -11,7 +11,7 @@ gboolean string_is_integer(const gchar* string) {
 user_preference* preference_initialize(const gchar* username) {
 	if(!username) return NULL;
 	
-	user_preference* pref = g_new(struct user_preference_t,1);
+	user_preference* pref = g_new0(struct user_preference_t,1);
 	pref->username = g_strdup(username);
 	pref->parser = json_parser_new();
 	pref->tests = g_sequence_new((GDestroyNotify)free_testcase);
@@ -62,16 +62,22 @@ gboolean testcase_add_file(testcase* test, testfile* file) {
 	return g_hash_table_insert(test->files,g_strdup(file->id),file);
 }
 
-testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* path, const gchar* method, gboolean delete) {
-	if(!id || !file || !path || !method) return NULL;
+testfile* testfile_initialize(const gchar* _id, const gchar* _file, const gchar* _path, const gchar* _method, gboolean _delete) {
+	if(!_id || !_file || !_path || !_method) return NULL;
 	
 	testfile* tfile = g_new0(struct testfile_t,1);
-	tfile->id = g_strdup(id);
-	tfile->path = g_strdup(path);
-	tfile->file = g_strdup(file);
-	tfile->method = g_strdup(method);
-	tfile->need_delete = delete;
-	//g_print("Added id :%s, file:%s, path:%s, method:%s ",tfile->id,tfile->file,tfile->path,tfile->method);
+	tfile->id = g_strdup(_id);
+	tfile->path = g_strdup(_path);
+	tfile->file = g_strdup(_file);
+	tfile->method = g_strdup(_method);
+	tfile->need_delete = _delete;
+	
+	tfile->required = NULL;
+	tfile->reqinfo = NULL;
+	tfile->moreinfo = NULL;
+	tfile->infosend = NULL;
+	tfile->inforecv = NULL;
+
 	return tfile;
 }
 
@@ -161,8 +167,11 @@ void free_jsonreply(gpointer data) {
 
 void free_key(gpointer data) {
 	gchar* str = (gchar*)data;
+
+#ifdef G_MESSAGES_DEBUG
+	g_print("Freeing: %s\n", str);
+#endif
 	g_free(str);
 	
 }
-
 
