@@ -396,6 +396,6 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 * @return Path to this tests' base
 */
 gchar* tests_make_path_for_test(gchar* username, testcase* test) {
-	gchar* filepath = g_strjoin("/",TASKPATH,username,test->name,NULL);
+	gchar* filepath = g_strjoin("/",TESTPATH,username,test->name,NULL);
 	return filepath;
 }

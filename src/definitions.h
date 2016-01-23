@@ -1,7 +1,7 @@
 #ifndef __DEFINITIONS_H_
 #define __DEFINITIONS_H_
 
-#define TASKPATH "tests"
+#define TESTPATH "tests"
 #define PREFERENCEFILE "preferences.json"
 
 #define EXIT_FAILURE -1
