@@ -1,0 +1,13 @@
+{
+	"user_guid": "{parent}",
+	"task_guid": "{parent}",
+	"case_guid": "{parent}",
+	"quantity": "1",
+	"unit_price": "100",
+	"unit_cost": "100",
+	"measurement_unit": "km",
+	"travel_start_time": "2016-01-18T08:00:00",
+	"travel_end_time": "2016-01-24T:20:00:00",
+	"product_guid": "{getinfo}"
+}
+

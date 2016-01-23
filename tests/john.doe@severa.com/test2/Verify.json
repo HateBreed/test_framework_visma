@@ -1,0 +1,20 @@
+{
+	"data": [
+	{
+		"title": "Work hours",
+		"formatted_value":"5 h"
+	},
+	{
+		"title": "Labor expenses",
+		"formatted_value":"150,00 €"
+	},
+	{
+		"title":"Expenses",
+		"formatted_value":"344,00 €"
+	},
+	{
+		"title": "Ready to bill",
+		"formatted_value":"760,00 €"
+	}
+	]
+}

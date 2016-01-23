@@ -1,0 +1,6 @@
+{
+	"data": {
+		"path": "products?type=Mileage",
+		"method": "GET"
+	}
+}
