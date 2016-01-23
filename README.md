@@ -15,16 +15,19 @@ A testing framework made for Visma Solutions Oy as a pre-interview task
  * Curl (curl)
 
 ## Compiling
-make
+ * compile: make
+ * debug: make debug
 
 ## Running
 ./testfw -u (username)
+or with default username
+make run
 
 
 ## Approach
 This testing framework is written with C using glib, glib-json and curl libraries. The basic idea is to use the REST API defined in preferences.json for testing with the given testcases.
 
-This framework is highly configurable. Multiple different json test files are supported. A main file contains the generic test details, such as REST API URL and the files to be used as testing or adding new data. Each file has multiple parameters to configure from REST API path to HTTP method. Each of the testfiles or added data jsons can have two extra types for member field values ({parent} and {getinfo}). If a member field has either of this value it has to include also a configuration json for this member field (see Structure of testcase files). This configuration tells from which file response the value is to be retrived with a specific member field name.
+This framework is highly configurable. Multiple different json test files are supported. A main file contains the generic test details, such as REST API URL and the files to be used as testing or adding new data. Each file has multiple parameters to configure from REST API path to HTTP method. Each of the testfiles or added data jsons can have two extra types for member field values ({parent} and {getinfo}). If a member field has either of this value it has to include also a configuration json for this member field (see Structure of testcase files). This configuration tells from which file response the value is to be retrived with a specific member field name. Also, any field containing integers can be configured and they are treated as double type.
 
 ### Order of things 
 
@@ -42,7 +45,14 @@ Next after selecting the test it will be run. Following sequence is used:
 
 ### Structure of testcase files
 
-For each user a seprate folder with the users full name (e.g. john.doe@severa.com) has to be created, this must contain a preferences file such as [preferences.json](https://github.com/HateBreed/test_framework_visma/blob/master/tests/john.doe%40severa.com/preferences.json). In this file each test belongin to the user are listed under "tests" containg test name, url and array of files. 
+For each user a seprate folder with the users full name (e.g. john.doe@severa.com) has to be created, this must contain a preferences file such as [preferences.json](https://github.com/HateBreed/test_framework_visma/blob/master/tests/john.doe%40severa.com/preferences.json). In this file each test belongin to the user are listed under "tests" containg test name, url, server encoding, array containing fields that are numerical and array of files. 
+
+In preferences.json:
+* name - testname
+* URL - REST API URL
+* encoding - character encoding of the server
+
+The member field integerfields can be used to list all the member fields that are to be treated as integers (double). There is no need to have any values for each, the member names are used to form a list of these fields.
 
 Each file entry in preferences.json must contain following:
  * id - File identification used within test framework databases. ID "login" is the credentials json and others must have identification as integer starting from "0". No limit restriction.
@@ -80,7 +90,7 @@ No compromises, except that the user interface is lacking finesse. It is crude. 
 
 ## Open issues
 
-Character encoding is not done at any point. This must be addressed. On Linux everything is UTF-8 but ISO8859-something is used on serverside, resulting in € character to be printed as ? and messing up some printing to cli. Need to look at glib documentation how to do this correctly.
+Character encoding is not done at any point. This must be addressed. On Linux everything is UTF-8 but ISO8859-something is used on serverside, resulting in € character to be printed as ? and messing up some printing to cli. Need to look at glib documentation how to do this correctly. **UPDATE**: the character encoding is easy with glib but it does not seem to work properly yet and, therefore, is disabled although there is a possibility to configure server side encoding. 
 
 There are memory leaks. Some might be because of agile coding and hurry, others may be false positives reported by valgrind because glib utilizes memory slicing not well understood by valgrind.
 
