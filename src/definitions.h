@@ -14,7 +14,7 @@
 typedef struct user_preference_t {
 	gchar *username;
 	JsonParser *parser;
-	GSequence *tests;
+	GSequence *tests; // List of tests
 } user_preference;
 
 typedef struct testcase_t {

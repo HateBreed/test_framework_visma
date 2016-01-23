@@ -146,7 +146,6 @@ void destroy_preferences() {
 }
 
 gchar* preference_make_path(user_preference* preference) {
-	//const gchar separator = G_DIR_SEPARATOR;
 	gchar* path = g_strjoin("/",TASKPATH,preference->username,PREFERENCEFILE,NULL);
 	g_print("Path is \"%s\"\n",path);
 	return path;
