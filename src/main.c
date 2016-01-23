@@ -51,9 +51,12 @@ gboolean run_test_selection(gchar* user) {
 				tnumber = getc(stdin);
 		
 				// Consume newline markers
-				temp = fgets(temp,TEMPLEN,stdin);
+				if(tnumber != '\n') temp = fgets(temp,TEMPLEN,stdin);
 			}
-			else g_print("Starting rerun of test %d\n",g_ascii_digit_value(tnumber));
+			else {
+				g_print("Starting rerun of test %d\n",g_ascii_digit_value(tnumber));
+				rerun = FALSE;
+			}
 
 			if(g_ascii_isdigit(tnumber) && 
 				g_ascii_digit_value(tnumber) <= g_sequence_get_length(prefs->tests) &&
@@ -89,11 +92,12 @@ gboolean run_test_selection(gchar* user) {
 						loop = FALSE;
 						break;
 					default:
-						g_print("Invalid selection.\n");
+						g_print("Invalid selection. Return to main.\n");
+						rerun = FALSE;
 						break;
 				} // switch
 				// Consume newline markers
-				temp = fgets(temp,TEMPLEN,stdin);
+				if(response != '\n') temp = fgets(temp,TEMPLEN,stdin);
 			} // if
 			else if(tnumber == 'q') loop = FALSE;
 			else g_print("Invalid test id (%d)\n",g_ascii_digit_value(tnumber));
