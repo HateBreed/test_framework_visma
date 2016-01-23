@@ -108,7 +108,7 @@ There are memory leaks. Some might be because of agile coding and hurry, others 
 
 Error checking is lacking in many cases. Again, a symptom caused by agile coding and hurry.
 
-User interface is buggy.
+<del>User interface is buggy.</del>
 
 Reading of the required fields ({parent}) and fields requiring more info ({getinfo}) is not efficient. This must be integrated into loading process of the JSON and not to do separately.
 
