@@ -144,15 +144,18 @@ gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
 		// First is login, it is always first in the list
 		if(testidx == 0) {
 			tfile->recv = http_post(url,tfile->send,tfile->method);
-			gchar* token = get_value_of_member(tfile->recv,"token",NULL);
-			set_token(token);
-			g_free(token);
+			if(tfile->recv) {
+				gchar* token = get_value_of_member(tfile->recv,"token",NULL);
+				set_token(token);
+				g_free(token);
+			}
+			else rval = FALSE;
 		}
 		
 		// Case creation is second
 		else if(testidx == 1) {
 			tfile->recv = http_post(url,tfile->send,tfile->method);
-			if(verify_server_response(tfile->send,tfile->recv)) {
+			if(tfile->recv && verify_server_response(tfile->send,tfile->recv)) {
 				g_print ("Case added correctly\n\n\n");
 			}
 			else rval = FALSE;
@@ -292,7 +295,6 @@ void tests_build_test_sequence(testcase* test) {
 * @param value - Value corresponding to the key in hashtable
 * @param testpath - Base path to tests
 */
-
 void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer testpath) {
 
 	JsonParser *parser = json_parser_new();
