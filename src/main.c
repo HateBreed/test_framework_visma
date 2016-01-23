@@ -10,15 +10,25 @@
 #include "tests.h"
 #include "definitions.h"
 
-gchar testpath[] = "tests/";
 #define USERNAME_MAX_CHAR 51
 #define TEMPLEN 100
 
+/** 
+* Test selection part of UI. Lists tests for this user
+* and awaits for selection. Runs test if it is found and
+* asks whether to rerun test or to quit or to return to main.
+*
+* @param user username to use for loading preferences
+*
+* @return TRUE if preferences were found and loaded
+*/
 gboolean run_test_selection(gchar* user) {
 
 	user_preference* prefs = NULL;
 	gchar* temp = (gchar*)g_try_malloc(TEMPLEN);
+	gboolean rval = TRUE;
 
+	// Load preferences for this user
 	if((prefs = load_preferences(user))) {
 		
 		g_print("%d test%s loaded for %s:\n",
@@ -34,8 +44,8 @@ gboolean run_test_selection(gchar* user) {
 			GSequenceIter* iter = NULL;
 			
 			if(!rerun) { 
-				g_print("id\tname\tfiles\n");
-				g_print("-----------------------------\n");
+				g_print("id\tname\tfiles\turl\n");
+				g_print("-------------------------------------------------------------------------------\n");
 			
 				for(iter = g_sequence_get_begin_iter(prefs->tests); 
 					!g_sequence_iter_is_end(iter) ; 
@@ -43,11 +53,11 @@ gboolean run_test_selection(gchar* user) {
 				{
 					testcase* t = (testcase*)g_sequence_get(iter);
 			
-					g_print(" %d\t%s\t%d\n",idx+1,t->name,g_hash_table_size(t->files));
+					g_print(" %d\t%s\t%d\t%s\n",idx+1,t->name,g_hash_table_size(t->files),t->URL);
 					idx++;
 				}
 	
-				g_print("Select test to run (or q to quit): ");
+				g_print("\nSelect test id to run, q to quit, m to return to user selection: ");
 				tnumber = getc(stdin);
 		
 				// Consume newline markers
@@ -80,7 +90,7 @@ gboolean run_test_selection(gchar* user) {
 			
 				tests_destroy(test);
 				
-				g_print("Redo test (r) or quit (q): ");
+				g_print("Redo test (r) or quit (q) or go to main (m): ");
 				
 				gchar response = getc(stdin);
 			
@@ -91,6 +101,10 @@ gboolean run_test_selection(gchar* user) {
 					case 'q':
 						loop = FALSE;
 						break;
+					case 'm':
+						loop = FALSE;
+						rval = FALSE;
+						break;
 					default:
 						g_print("Invalid selection. Return to main.\n");
 						rerun = FALSE;
@@ -100,16 +114,23 @@ gboolean run_test_selection(gchar* user) {
 				if(response != '\n') temp = fgets(temp,TEMPLEN,stdin);
 			} // if
 			else if(tnumber == 'q') loop = FALSE;
+			else if(tnumber == 'm') {
+				loop = FALSE;
+				rval = FALSE;
+			}
 			else g_print("Invalid test id (%d)\n",g_ascii_digit_value(tnumber));
 			iter = NULL;
 		} // while
 		destroy_preferences();
 	} // if
-	else g_print("Preferences for user \"%s\" were not found\n",user);
+	else {
+		g_print("Preferences for user \"%s\" were not found\n",user);
+		rval = FALSE;
+	}
 	
 	g_free(temp);
 	
-	return TRUE;
+	return rval;
 }
 
 void run_user_loop() {
@@ -117,7 +138,7 @@ void run_user_loop() {
 	gchar* user = g_try_malloc0(USERNAME_MAX_CHAR);
 	
 	while(loop_user) {
-		g_print("Give username whose tests to run (max. %d chars): ",USERNAME_MAX_CHAR-1);
+		g_print("Give username whose tests to run (max. %d chars) or quit (q): ",USERNAME_MAX_CHAR-1);
 	
 		user = fgets(user,USERNAME_MAX_CHAR,stdin);
 		
@@ -125,12 +146,12 @@ void run_user_loop() {
 		if(user[strlen(user)-1] == '\n') user[strlen(user)-1]= '\0';
 		
 		// Contains only 1 character or less
-		if(strlen(user) < 2) {
+		if(strlen(user) < 1) {
 			g_print("Empty username given.\n");
 			memset(user,'\0',USERNAME_MAX_CHAR);
 		}
 		// Quitting
-		else if (g_strcmp0("quit",user) == 0) {
+		else if (g_strcmp0("quit",user) == 0 || g_strcmp0("q",user) == 0) {
 			g_free(user);
 			return;
 		}
@@ -161,7 +182,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	if(!user) run_user_loop();
-	else run_test_selection(user);
+	else if(!run_test_selection(user)) run_user_loop();
 	
 	return 0;
 }
