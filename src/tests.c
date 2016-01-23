@@ -89,7 +89,7 @@ gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
 			JsonParser *parser = json_parser_new();
 		
 			// Read json detailed by this data (stucture)
-			if(!load_json_from_file(parser, filepath)) return;	
+			if(!load_json_from_file(parser, filepath)) return FALSE;	
 		
 			// Establish a generator to get the character representation
 			JsonGenerator *generator = json_generator_new();
@@ -137,7 +137,9 @@ gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
 		// Create url
 		gchar* url = g_strjoin("/",test->URL,tfile->path,NULL);
 		
-		g_debug("Conducting test id \"%s\"\n",test->name);
+#ifdef G_MESSAGES_DEBUG
+		g_print("Conducting test id \"%s\"\n",test->name);
+#endif
 				
 		// First is login, it is always first in the list
 		if(testidx == 0) {
@@ -187,6 +189,7 @@ gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
 
 		g_free(url);	
 	}
+	return rval;
 }
 
 /** 

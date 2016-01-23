@@ -40,7 +40,7 @@ void print_check_failure(const gchar* request, const gchar* response) {
 * @param Member field value
 */
 void print_check_missing(const gchar* membervalue) {
-	print_check_failure(member,"null");
+	print_check_failure(membervalue,"null");
 }
 
 /**
@@ -410,6 +410,7 @@ gboolean verify_in_array(JsonParser *parser, const gchar* check_value1, const gc
 							success = FALSE;
 							print_check_failure(check_value2, value2);
 						}
+						else print_check_ok();
 					}
 				} // for
 				
