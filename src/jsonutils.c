@@ -12,25 +12,53 @@ void set_integer_fields(GSList *intfields) {
 	integer_fields = intfields;
 }
 
+/**
+* Print check initial string
+*
+* @param member Member field
+* @param value MEmber field value
+*/
 void print_check_init(const gchar* member, const gchar* value) {
 	g_print("Checking that \"%s\" is \"%s\" ",member,value);
 }
 
+/**
+* Print check failure string
+* 
+* @param request Value that was requeste
+* @param response Value set by the server
+*/
 void print_check_failure(const gchar* request, const gchar* response) {
 	if(!request  || !response) return;
 	g_print("[failure]\n\tValues differ: \n\t\trequest:\t%s\n\t\tresponse:\t%s\n",
 		request, response);
 }
 
-void print_check_missing(const gchar* member) {
+/**
+* Print check when value is missing (null), calls print_check_failure.
+*
+* @param Member field value
+*/
+void print_check_missing(const gchar* membervalue) {
 	print_check_failure(member,"null");
 }
 
+/**
+* Print ok for check
+*/
 void print_check_ok() { g_print("[ok]\n"); }
 
+/**
+* Check if member field contains integers only
+* 
+* @param member Name of the member to check (or member itself)
+*
+* @return TRUE the member contains integers only
+*/
 gboolean is_member_integer(const gchar* member) {
 
 	if(member && integer_fields) {
+		// Go through list
 		for(gint index = 0; index < g_slist_length(integer_fields); index++) {
 			if(g_strcmp0(member,(gchar*)g_slist_nth_data(integer_fields,index)) == 0)
 				return TRUE;
@@ -39,6 +67,14 @@ gboolean is_member_integer(const gchar* member) {
 	return FALSE;
 }
 
+/**
+* Get string value of member field from json loaded in reader
+* 
+* @param reader Reader containing json which is used to get the member field value
+* @param member NAme of the member field to use 
+*
+* @return Pointer to newly allocated gchar (has to be freed with g_free())
+*/
 gchar* get_json_member_string(JsonReader *reader, const gchar* member) {
 	if(!reader || !member) return NULL;
 	gchar* string = NULL;
@@ -51,6 +87,16 @@ gchar* get_json_member_string(JsonReader *reader, const gchar* member) {
 	return string;
 }
 
+/**
+* Get integer value of member field as string from json loaded in reader.
+* 
+* Gets the value as double and prints it to gchar pointer (with g_strdup_printf())
+* 
+* @param reader Reader containing json which is used to get the member field value
+* @param member NAme of the member field to use 
+*
+* @return Pointer to newly allocated gchar (has to be freed with g_free())
+*/
 gchar* get_json_member_integer(JsonReader *reader, const gchar* member) {
 	if(!reader || !member) return 0;
 	gchar* intval = NULL;
@@ -66,12 +112,22 @@ gchar* get_json_member_integer(JsonReader *reader, const gchar* member) {
 	return intval;
 }
 
+/**
+* Load json from file to given parser
+* 
+* @param parser Parser to which the specified json is loaded to
+* @param filepath path to file to be loaded
+*
+* @return TRUE when file was loaded
+*/
 gboolean load_json_from_file(JsonParser *parser, const gchar* filepath) {
 	if(!parser || !filepath) return FALSE;
 	
 	gboolean rval = FALSE;
 	
 	GError *error = NULL;
+	
+	// Load file and get returnvalue
 	rval = json_parser_load_from_file(parser, filepath, &error);
 		
 	if (error && !rval) {
@@ -82,6 +138,15 @@ gboolean load_json_from_file(JsonParser *parser, const gchar* filepath) {
 	return rval;
 }
 
+/**
+* Load json from data to given parser
+* 
+* @param parser Parser to which the specified json is loaded to
+* @param data buffer containing json as charstring
+* @param length length of the data
+*
+* @return TRUE when data was loaded
+*/
 gboolean load_json_from_data(JsonParser* parser, const gchar* data, const gssize length) {
 	if(!parser || !data || length == 0) return FALSE;
 
@@ -98,6 +163,17 @@ gboolean load_json_from_data(JsonParser* parser, const gchar* data, const gssize
 	return rval;
 }
 
+/**
+* Retrieve given value from given json as data. Can be used to search from an array or
+* from an object with two level search. First search value is the member name whose value
+* is retrieved. Second value defines whether there is a object within that has to be accessed.
+*
+* @param jsondata JSON as data in form of jsonreply_t
+* @param search Member name whose value is retrieved
+* @param search2 Search parameter that can increase the depth of search
+*
+* @return A newly allocated (by get_json_member_string()) gchar that must be free'd with g_free()
+*/
 gchar* get_value_of_member(jsonreply* jsondata, const gchar* search, const gchar* search2) {
 	if(!jsondata || !search) return NULL;
 	
@@ -115,28 +191,51 @@ gchar* get_value_of_member(jsonreply* jsondata, const gchar* search, const gchar
 			if(json_reader_is_array(reader)) {
 				for(gint idx = 0; idx < json_reader_count_elements(reader); idx++) {
 					json_reader_read_element(reader,idx);
+					
+					// Depth increased?
+					if(search2) {
+						g_debug("get_value_of_member: search: %s search2: %s.",search,search2);
+						if(json_reader_read_member(reader,search2)) {
+							g_debug(".. found\n");
+						}
+					}
+					
+					// If member contains integer
 					if(is_member_integer(search)) value = get_json_member_integer(reader,search);
+					// Plain string
 					else value = get_json_member_string(reader,search);
+					
+					// End "depth" member
+					if(search2) json_reader_end_member(reader);
+					
+					// End this element in array
 					json_reader_end_element(reader);
+					
+					// Found? 
 					if(value) break;
 				}
 			}
 			// Plain json object
 			else if(json_reader_is_object(reader)) {
+			
+				// Depth increased?
 				if(search2) {
 					g_debug("get_value_of_member: search: %s search2: %s.",search,search2);
 					if(json_reader_read_member(reader,search2)) {
 						g_debug(".. found\n");
 					}
 				}
+				// Member contains integers?
 				if(is_member_integer(search)) value = get_json_member_integer(reader,search);
+				// Plain string
 				else value = get_json_member_string(reader,search);
+				
+				// End "depth" member
 				if(search2) json_reader_end_member(reader);
 			}
-			// TODO check if is on other type
 		}
 		
-		json_reader_end_member(reader);
+		json_reader_end_member(reader); // data
 		
 		g_object_unref(reader);
 	}
@@ -145,7 +244,18 @@ gchar* get_value_of_member(jsonreply* jsondata, const gchar* search, const gchar
 	return value;
 }
 
-// TODO use a hashtable to include all values to be changed
+
+/** 
+* Replace value of given member field in the json. Creates a new json from the given jsonreply_t
+* while replacing a single value in the json data. Clumsy, a hash table should be used instead to
+* replace all values at the same time.
+*
+* @param jsondata Pointer to structure containing json
+* @param member Member field name whose value is to be replaced
+* @param value New value for the member field
+*
+* @return TRUE when data could be loaded
+*/
 gboolean set_value_of_member(jsonreply* jsondata, const gchar* member, const gchar* value) {
 	if(!jsondata || !member || !value) return FALSE;
 	
@@ -202,6 +312,14 @@ gboolean set_value_of_member(jsonreply* jsondata, const gchar* member, const gch
 	return rval;
 }
 
+/**
+* Create a JSON delete reply containing only one given member with given value
+*
+* @param member member field to include
+* @value value Value to assign to member
+*
+* @return jsonreply containing the newly created reply
+*/
 jsonreply* create_delete_reply(const gchar* member, const gchar* value) {
 	if(!value || !member) return NULL;
 	

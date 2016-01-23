@@ -3,21 +3,35 @@
 
 static GSList *test_sequence = NULL;
 
-void print_hashtable_strings(gpointer key, gpointer value, gpointer userdata) {
-	g_print("\"%s\":\"%s\"\n",(gchar*)key, (gchar*)value);
-}
-
+/**
+ * Placeholder for initialization
+ */
 void tests_initialize() {
 
 }
 
+/**
+* Clear the test environment. Currently; clear test sequence
+*/
 void tests_destroy() {
 	g_slist_free_full(test_sequence,(GDestroyNotify)free_key);
 }
 
+/**
+* Run all tests of the specified user.
+* @param username User whose test is to run
+* @param test Test structure containing test details
+* 
+* @return Result of tests, TRUE if all were verified
+*/
 gboolean tests_run_test(gchar* username, testcase* test) {
 
+	gboolean rval = TRUE;
+
+	// Initialize http with encoding
 	http_init(test->encoding);
+	
+	// Establish path to test
 	gchar* testpath = tests_make_path_for_test(username,test);
 
 	// Check which fields from the case creation reply have to be stored for future use
@@ -26,19 +40,29 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 	// Create the sequence of sending tests (json files as charstring data)
 	tests_build_test_sequence(test);
 	
+	// Set list of integer member fields for jsonutils to use
 	set_integer_fields(test->intfields);
 	
-	tests_conduct_tests(test,testpath);
+	// Do tests
+	rval = tests_conduct_tests(test,testpath);
 	
 	tests_unload_tests(test,testpath);
 	
 	g_free(testpath);
 	http_close();
 	
-	return TRUE;
+	return rval;
 }
 
-void tests_conduct_tests(testcase* test, gchar* testpath) {
+/**
+* Do all tests according to the testing sequence
+* @param test Test details
+* @testpath Base path of tests
+* @return TRUE when all tests were verified ok
+*/
+gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
+
+	gboolean rval = TRUE;
 
 	// Go through the test sequence
 	for(gint testidx = 0; testidx < g_slist_length(test_sequence); testidx++) {
@@ -129,6 +153,7 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 			if(verify_server_response(tfile->send,tfile->recv)) {
 				g_print ("Case added correctly\n\n\n");
 			}
+			else rval = FALSE;
 		}
 		
 		// From third start the tests, here the required fields are checked and replaced
@@ -152,7 +177,10 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 				if(verify_server_response(tfile->send,tfile->recv)) {
 					g_print ("Test id \"%s\" was added correctly\n",tfile->id);
 				}
-				else g_print("Test id \"%s\" was not added correctly\n", tfile->id);
+				else {
+					g_print("Test id \"%s\" was not added correctly\n", tfile->id);
+					rval = FALSE;
+				}
 				g_print("\n\n");
 			}
 		}
@@ -161,6 +189,11 @@ void tests_conduct_tests(testcase* test, gchar* testpath) {
 	}
 }
 
+/** 
+* Unload (or DELETE) tests from server, done in reverse order starting from last test
+* @param test Test details
+* @testpath base path to tests
+*/
 void tests_unload_tests(testcase* test,gchar* testpath) {
 	
 	jsonreply *deldata = NULL;
@@ -220,6 +253,10 @@ void tests_unload_tests(testcase* test,gchar* testpath) {
 	
 }
 
+/**
+* Create sequence in which tests are conducted
+* @param test Test details
+*/
 void tests_build_test_sequence(testcase* test) {
 	// First file with login
 	for(gint testidx = 0; testidx < g_hash_table_size(test->files); testidx++) {
@@ -240,6 +277,18 @@ void tests_build_test_sequence(testcase* test) {
 		g_free(searchparam);
 	}
 }
+
+/**
+* Checks the fields from the files defined for this test that which contain {parent} and {getinfo}
+* values. These member names containing such values are added to the lists of the test files to be
+* replaced later when the particular test is conducted. 
+*
+* This is called only by the hash table foreach function and is not meant to be used otherwise.
+* 
+* @param key - Key in hash table
+* @param value - Value corresponding to the key in hashtable
+* @param testpath - Base path to tests
+*/
 
 void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer testpath) {
 
@@ -333,7 +382,14 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 	g_free(filepath);
 }
 
-
+/**
+* Make path for the tests using username and test name
+*
+* @param username USername to use in path
+* @param test Test details
+*
+* @return Path to this tests' base
+*/
 gchar* tests_make_path_for_test(gchar* username, testcase* test) {
 	gchar* filepath = g_strjoin("/",TASKPATH,username,test->name,NULL);
 	return filepath;
