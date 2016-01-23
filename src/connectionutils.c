@@ -47,6 +47,7 @@ void http_close() {
 	g_free(token); // TODO set up secure memset
 	
 	if(curl) curl_easy_cleanup(curl);
+	curl = NULL;
 	curl_global_cleanup();
 }
 

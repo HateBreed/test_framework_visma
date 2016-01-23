@@ -131,7 +131,7 @@ gboolean load_json_from_file(JsonParser *parser, const gchar* filepath) {
 	rval = json_parser_load_from_file(parser, filepath, &error);
 		
 	if (error && !rval) {
-		g_error ("Cannot parse file \"%s\". Reason: %s\n", filepath, error->message);
+		g_print ("Cannot parse file \"%s\". Reason: %s\n", filepath, error->message);
 		g_error_free(error);
 	}
 	

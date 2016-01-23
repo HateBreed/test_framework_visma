@@ -154,6 +154,31 @@ gboolean testcase_add_file(testcase* test, testfile* file) {
 }
 
 /**
+* Reset given test - clear data from each testfile
+* @param test to reset
+*/
+void testcase_reset_file(gpointer key, gpointer data, gpointer user) {
+ 	if(!data) return;
+ 	testfile *tfile = (testfile*)data;
+ 	
+ 	free_jsonreply(tfile->send);
+	free_jsonreply(tfile->recv);
+	
+	g_slist_free_full(tfile->required,(GDestroyNotify)free_key);
+	g_slist_free_full(tfile->moreinfo,(GDestroyNotify)free_key);
+	
+	g_slist_free_full(tfile->reqinfo,(GDestroyNotify)free_jsonreply);
+	g_slist_free_full(tfile->infosend,(GDestroyNotify)free_jsonreply);
+	g_slist_free_full(tfile->inforecv,(GDestroyNotify)free_jsonreply);
+	
+	tfile->required = NULL;
+	tfile->reqinfo = NULL;
+	tfile->moreinfo = NULL;
+	tfile->infosend = NULL;
+	tfile->inforecv = NULL;
+}
+
+/**
 * Initialize a testfile with g_new0(). 
 * Sets up a testfile_t that must be free'd with free_testfile().
 * Duplicates all given strings and sets all GSequences to NULL.

@@ -6,15 +6,22 @@ static GSList *test_sequence = NULL;
 /**
  * Placeholder for initialization
  */
-void tests_initialize() {
-
+void tests_initialize(testcase* test) {
+	// Initialize http with encoding
+	http_init(test->encoding);
 }
 
 /**
 * Clear the test environment. Currently; clear test sequence
 */
-void tests_destroy() {
+void tests_destroy(testcase* test) {
 	g_slist_free_full(test_sequence,(GDestroyNotify)free_key);
+	test_sequence = NULL;
+	
+	g_hash_table_foreach(test->files,(GHFunc)testcase_reset_file,NULL);
+	
+	// Cleanup http
+	http_close();
 }
 
 /**
@@ -28,9 +35,6 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 
 	gboolean rval = TRUE;
 
-	// Initialize http with encoding
-	http_init(test->encoding);
-	
 	// Establish path to test
 	gchar* testpath = tests_make_path_for_test(username,test);
 
@@ -42,14 +46,13 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 	
 	// Set list of integer member fields for jsonutils to use
 	set_integer_fields(test->intfields);
-	
+
 	// Do tests
 	rval = tests_conduct_tests(test,testpath);
-	
+
 	tests_unload_tests(test,testpath);
-	
+		
 	g_free(testpath);
-	http_close();
 	
 	return rval;
 }
@@ -61,6 +64,8 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 * @return TRUE when all tests were verified ok
 */
 gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
+
+	if(!test || !testpath) return FALSE;
 
 	gboolean rval = TRUE;
 
@@ -75,7 +80,6 @@ gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
 		gchar c = '0';
 		while(c != '\n') c = getc(stdin);
 #endif
-		
 		// Get the data with the searchparameter from hash table
 		testfile* tfile = (testfile*)g_hash_table_find(test->files,
 			(GHRFunc)find_from_hash_table, 
@@ -279,7 +283,6 @@ void tests_build_test_sequence(testcase* test) {
 		if(testidx == 0) test_sequence = g_slist_prepend(test_sequence,g_strdup(tfile->id));
 		// Rest are added in order after login credentials
 		else test_sequence = g_slist_append(test_sequence,g_strdup(tfile->id));
-	
 		g_free(searchparam);
 	}
 }

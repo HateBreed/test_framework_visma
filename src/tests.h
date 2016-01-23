@@ -6,8 +6,8 @@
 #include "jsonutils.h"
 #include "utils.h"
 
-void tests_initialize();
-void tests_destroy();
+void tests_initialize(testcase* test);
+void tests_destroy(testcase* test);
 
 gboolean tests_run_test(gchar* username, testcase* test);
 

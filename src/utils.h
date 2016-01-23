@@ -17,6 +17,7 @@ gchar* preference_make_path(user_preference* preference);
 
 testcase* testcase_initialize(const gchar* url, const gchar* testname, const gchar* enc);
 gboolean testcase_add_file(testcase* test, testfile* file);
+void testcase_reset_file(gpointer key, gpointer data, gpointer user);
 
 testfile* testfile_initialize(const gchar* id, const gchar* file, const gchar* path, const gchar* method, gboolean delete);
 
