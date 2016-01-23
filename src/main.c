@@ -12,6 +12,8 @@
 
 gchar testpath[] = "tests/";
 
+
+
 int main(int argc, char *argv[]) {
 
 	user_preference* prefs = NULL;
@@ -65,6 +67,7 @@ int main(int argc, char *argv[]) {
 			g_print("Select test to run: ");
 			gchar tnumber = getc(stdin);
 			
+			// Consume newline markers
 			getc(stdin);
 
 			if(g_ascii_isdigit(tnumber) && 
@@ -75,14 +78,19 @@ int main(int argc, char *argv[]) {
 				
 				GSequenceIter* testpos = g_sequence_get_iter_at_pos(prefs->tests,
 					g_ascii_digit_value(tnumber)-1);
+					
 				testcase* test = (testcase*)g_sequence_get(testpos);
+				
 				g_print("Running test %c:\"%s\" to %s (with %d files)\n",
 					tnumber,test->name,test->URL,g_hash_table_size(test->files));
+					
 				tests_initialize();
-				tests_run_test(prefs->username,test);
-				tests_destroy();
-				g_print("Test %s complete\n",test->name);
 				
+				if(tests_run_test(prefs->username,test)) 
+					g_print("Test %s completed with failures.\n",test->name);
+				else g_print("Test %s complete\n",test->name);
+				
+				tests_destroy();
 				g_print("Redo test (r) or quit (q): ");
 				gchar response = getc(stdin);
 				

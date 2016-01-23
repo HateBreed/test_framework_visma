@@ -351,11 +351,24 @@ jsonreply* create_delete_reply(const gchar* member, const gchar* value) {
 	return delreply;
 }
 
+
+/**
+* Verify a JSON array loaded in parser that it has the given two values in one element,
+* more specificly that when check_value1 is found from a member within an element
+* having "title" as member name, the check_value2 is checked for equality to that elements
+* "formatted_value" field.
+*
+* @param parser Parser in which the JSON is loaded
+* @param check_value1 Value of "title" member field
+* @param check_value2 Value to be checked, the value of "formatted_value" member field
+*
+* @return TRUE only when equal match is found
+*/
 gboolean verify_in_array(JsonParser *parser, const gchar* check_value1, const gchar* check_value2) {
 	
 	if(!parser || !check_value1 || !check_value2) return FALSE;
 	
-	gboolean success = TRUE;
+	gboolean success = FALSE;
 	
 	// Reader for response
 	JsonReader *reader = json_reader_new (json_parser_get_root (parser));
@@ -416,6 +429,18 @@ gboolean verify_in_array(JsonParser *parser, const gchar* check_value1, const gc
 	return success;
 }
 
+/**
+* Verify two JSONs for equality of values. The members of request are
+* looped through and corresponding values are searched from response JSON.
+* Can iterate through arrays, which have all members within "data" member
+* and works for plain JSON objects. If an array is to be verified 
+* verify_in_array() is called.
+*
+* @param request Request jsonreply_t containing requested values
+* @param response Server response jsonreply_t containing values set by server
+*
+* @return TRUE when all values in request could be found from response and they match
+*/
 gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 
 	if(!request  || !response) return FALSE;
@@ -508,7 +533,10 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 					}
 					else print_check_ok();
 				}
-				else print_check_missing(req_membstring);
+				else {
+					print_check_missing(req_membstring);
+					test_ok = FALSE;
+				}
 				
 				g_free(req_membstring);
 				g_free(res_membstring);
@@ -524,6 +552,21 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 	return test_ok;
 }
 
+/**
+* Replace value of a required member in the sent JSON at given index
+* in the list of required members. Gets the member name and corresponding
+* jsonreply_t from which the three member field values are read:
+* (search_file, search_member and root_Task). These fields tell from
+* which file response, which member and whether sub-element is required to be used.
+* Calls get_value_of_member() to get values from JSON. And for setting
+* the value calls set_value_of_member().
+*
+* @param filetable GHashTable of testfile_t structs from which the file is searched
+* @param tfile Current testfile_t containing the member to be replaced
+* @param index Position of member name and JSON at testfile_t structures
+*
+* @return TRUE when value was replaced
+*/
 gboolean replace_required_member(GHashTable* filetable, testfile* tfile, gint index) {
 
 	if(!filetable || !tfile) return FALSE;
@@ -584,6 +627,24 @@ gboolean replace_required_member(GHashTable* filetable, testfile* tfile, gint in
 	return rval;
 }
 
+/**
+* Replace value of a member requiring more information from the server.
+* The JSON having the details is read at index of tfile structures and
+* an request is sent to url+"path" field in the JSON using "method". The
+* reply to this response contains a member field matching one at index in
+* the list of getinfo-member fields in tfile. 
+*
+* Calls get_value_of_member() to read the pfererences from getinfo JSON.
+* Calls http_post() to send the request (most likely GET).
+* Calls get_value_of_member() to get the value from the server response.
+* Calls set_value_of_member() to replace the member value.
+*
+* @param tfile Current testfile_t containing the member to be replaced
+* @param index Position of member name and JSON at testfile_t structures
+* @param url Base url to which request is sent
+*
+* @return TRUE when value was found in reply and replaced
+*/
 gboolean replace_getinfo_member(testfile* tfile, gint index, const gchar* url) {
 
 	if(!tfile  || !url) return FALSE;
