@@ -162,6 +162,36 @@ void run_user_loop() {
 	g_free(user);
 }
 
+gboolean run_user_test(gchar* user, gchar* testname) {
+	user_preference* prefs = NULL;
+	gboolean rval = FALSE;
+
+	// Load preferences for this user
+	if((prefs = load_preferences(user))) {
+		testcase* test = preference_get_test(prefs,testname);
+		if(test) {
+			g_print("Running test \"%s\" to %s (with %d files)\n",
+					test->name,test->URL,g_hash_table_size(test->files));
+				
+			tests_initialize(test);
+		
+			if(tests_run_test(prefs->username,test)) 
+				g_print("Test %s completed with failures.\n",test->name);
+			else g_print("Test %s complete\n",test->name);
+		
+			tests_destroy(test);
+			rval = TRUE;
+		}
+		else {
+			rval = FALSE;
+			g_print("Test \"%s\" not found\n",testname);
+		}
+		destroy_preferences();
+	}
+	else rval = FALSE;
+	
+	return rval;
+}
 
 int main(int argc, char *argv[]) {
 	
@@ -169,16 +199,28 @@ int main(int argc, char *argv[]) {
 	extern gint optopt;
 	gint optc = -1;
 	gchar* user = NULL;
+	gchar* test = NULL;
 	
 	// Check command line options
-	while ((optc = getopt(argc,argv,"u:")) != -1) {
+	while ((optc = getopt(argc,argv,"u:t:")) != -1) {
 		switch (optc) {
 			case 'u':
 				user = optarg;
 				break;
+			case 't':
+				test = optarg;
+				break;
 			default:
 				break;
 		}
+	}
+	
+	if(user && test) {
+		if(!run_user_test(user,test)) {
+			g_print("No such user or test found.\n");
+			return 1;
+		}
+		return 0;
 	}
 	
 	if(!user) run_user_loop();

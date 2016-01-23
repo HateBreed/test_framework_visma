@@ -100,7 +100,7 @@ testcase* preference_get_test(user_preference* preference, const gchar* testname
 	if(!preference || !testname) return NULL;
 	GSequenceIter* iter = NULL;
 	for(iter = g_sequence_get_begin_iter(preference->tests);
-		g_sequence_iter_is_end(iter); 
+		!g_sequence_iter_is_end(iter); 
 		iter = g_sequence_iter_next(iter)) {
 		testcase* test = (testcase*)g_sequence_get(iter);
 		if(g_strcmp0(test->name,testname) == 0) return test;
