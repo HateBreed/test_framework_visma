@@ -163,6 +163,8 @@ void testcase_reset_file(gpointer key, gpointer data, gpointer user) {
  	
  	free_jsonreply(tfile->send);
 	free_jsonreply(tfile->recv);
+	tfile->send = NULL;
+	tfile->recv = NULL;
 	
 	g_slist_free_full(tfile->required,(GDestroyNotify)free_key);
 	g_slist_free_full(tfile->moreinfo,(GDestroyNotify)free_key);
@@ -200,6 +202,9 @@ testfile* testfile_initialize(const gchar* tid, const gchar* jsonfile, const gch
 	tfile->file = g_strdup(jsonfile);
 	tfile->method = g_strdup(tmethod);
 	tfile->need_delete = tdelete;
+	
+	tfile->send = NULL;
+	tfile->recv = NULL;
 	
 	tfile->required = NULL;
 	tfile->reqinfo = NULL;
@@ -285,11 +290,12 @@ gboolean free_preferences(GHashTable* userlist, const gchar* username) {
 void free_testcase(gpointer data) {
 	if(!data) return;
 	testcase* test = (testcase*)data;
-	g_print("%s with %d files...",test->name,g_hash_table_size(test->files));
+	g_print("%s with %d files",test->name,g_hash_table_size(test->files));
 	g_free(test->URL);
 	g_free(test->name);
 	g_free(test->encoding);
 	if(test->files) {
+		g_print("...");
 		g_hash_table_destroy(test->files);
 		test->files = NULL;
 	}
@@ -314,13 +320,13 @@ void free_testfile(gpointer data) {
 	g_free(tfile->file);
 	g_free(tfile->path);
 	g_free(tfile->method);
-	
+
 	free_jsonreply(tfile->send);
 	free_jsonreply(tfile->recv);
-	
+
 	g_slist_free_full(tfile->required,(GDestroyNotify)free_key);
 	g_slist_free_full(tfile->moreinfo,(GDestroyNotify)free_key);
-	
+
 	g_slist_free_full(tfile->reqinfo,(GDestroyNotify)free_jsonreply);
 	g_slist_free_full(tfile->infosend,(GDestroyNotify)free_jsonreply);
 	g_slist_free_full(tfile->inforecv,(GDestroyNotify)free_jsonreply);
