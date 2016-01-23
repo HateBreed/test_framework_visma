@@ -88,12 +88,14 @@ The server-client would also enable using of timed tests with logging informatio
 
 No compromises, except that the user interface is lacking finesse. It is crude. A client-server paradigm would ease this that any language could be then used build a client for doing the tests while this code serves as a server.
 
-## Open issues
+## Open issues / need to improve
 
-Character encoding is not done at any point. This must be addressed. On Linux everything is UTF-8 but ISO8859-something is used on serverside, resulting in € character to be printed as ? and messing up some printing to cli. Need to look at glib documentation how to do this correctly. **UPDATE**: the character encoding is easy with glib but it does not seem to work properly yet and, therefore, is disabled although there is a possibility to configure server side encoding. 
+Character encoding is not done at any point. This must be addressed as it results in € character to be printed as ? and messing up some printing to cli. Need to look at glib documentation how to do this correctly. **UPDATE**: the character encoding is easy with glib but it does not seem to work properly yet and, therefore, is disabled although there is a possibility to configure server side encoding.
 
 There are memory leaks. Some might be because of agile coding and hurry, others may be false positives reported by valgrind because glib utilizes memory slicing not well understood by valgrind.
 
 Error checking is lacking in many cases. Again, a symptom caused by agile coding and hurry.
 
 User interface is buggy.
+
+Replacing of JSON member field values is not efficient, it does the replacing one at a time and then rewrites the json by changing only one value. This must be changed to one JSON write function that accepts a GHashTable of member field names as keys and their new values so all can be replaced in one run.
