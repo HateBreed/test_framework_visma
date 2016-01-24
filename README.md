@@ -63,17 +63,19 @@ Binary was created to support also a standalone run on Linux and with a script (
 
 ### Order of things 
 
-First the logged in user is used as a path to open the preferences.json in folder "tests/<username>". File preferences.json details all the tests of this user which are listed to cli ui. From this ui the user can select which test to conduct. At this point the separate test files are not loaded. 
+First the logged in user is used as a path to open the preferences.json in folder "tests/<username>". File preferences.json details all the tests of this user which are listed to cli ui. From this ui the user can select which test to conduct. At this point the separate test files are not loaded. Program can be also run by specifying both username and testname, this will load the user's preferences and requested test. The procedure in both cases is the same. 
 
 Next after selecting the test it will be run. Following sequence is used:
- - Go through each test file in database and search for {parent} and {getinfo} fields, include them in the testfile structure for future use of getting files details what to do with these member fields.
  - Build the sequence in which the tests are run. The test file with id "login" is always first and next are the testfiles in ascending order starting from id "0" which is the case creation file.
- - Run the tests according to the built sequence. 
-   - Start by loading a testfile in sequence
-   - Next replace any {id} strings in "path" of the testfile with the guid of the case.
-   - Conduct test, if id is "login" add token for http functions. If id is "0" create the case and verify its values. For rest of the tests do as the files specify; replace any {parent} and {getinfo} member values according to their configurations, send json to server and verify the response.
- - Unload all tests in reverse order. If the testfile has "delete" member defined as "no" in preferences.json do nothing for it. Get the correct guids from responses and send DELETE to REST API URL using the appropriate path for this testfile.
- - Return to cli UI and ask for further info from user (r - retry, q - quit).
+ - Start by loading a testfile in sequence and go through them in ascending order
+ 	- Go through each test file in database if method is for sending (POST/PUT) and search for {parent} and {getinfo} fields, include them in the testfile structure for future use of getting files details what to do with these member fields.
+ 	- Next replace any {id} strings in "path" of the testfile with the guid of the case.
+ 	- Conduct test:
+ 		- if id is "login" send the specified credentials file and add token for http functions. 
+ 		- If id is "0" create the case by sending the specified data and verify its values. 
+ 		- For rest of the tests do as the files specify; replace any {parent} and {getinfo} member values according to their configurations if method to send is POST/PUT. This will create a hash table of values to be replaced (both {parent} and {getinfo}) in a single run creating a new JSON for sending. Last, send the altered JSON to server and verify the values in response.
+ 	- Unload all tests in reverse order. If the testfile has "delete" member defined as "no" in preferences.json do nothing for it. Get the correct guids from responses and send DELETE to REST API URL using the appropriate path for this testfile.
+ 	- Return to cli UI and ask for further info from user (r - retry, u - return to user selection, m - return to main (testlist) and q - quit).
 
 ### Structure of testcase files
 
@@ -93,7 +95,7 @@ Each file entry in preferences.json must contain following:
  * method - HTTP method to use when sending this data, the file defined by "file" field is sent only when this field is POST
  * delete - Must contain either "yes" or "no" telling the framework whether this file requires that data is deleted afterwards. If "yes" then the test framework will send DELETE to corresponding REST API using both path and identification returned by the server.
  
-Each json file that is going to be sent can contain any data, these will be sent "as is" but two values for json members can be used for getting information from elsewhere:
+Each json file that is going to be sent can contain any data but anything defined within "data" member field must be inside an array. These files will be sent "as is" but two values for json members can be used for getting information from elsewhere:
  * {parent} - Tells that a response to parent file must be checked. This needs to be specified in a separate json file named as <this.json>.info.<membername>.json (e.g. Expense.json with member field "case_guid" results in Expense.json.info.case_guid.json). This file must contain following fields within ["data" member](https://github.com/HateBreed/test_framework_visma/blob/master/tests/john.doe%40severa.com/test1/Expense.json.info.case_guid.json) :
    * root_task - "yes" or "no", if "yes" then the root_task entry within a json object will be used to get the value withheld by "search_member"
    * search_member - Name of the member field to be searched within "search_file". Value of this member field is assigned to the member field to which this file is connected to
