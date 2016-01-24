@@ -36,6 +36,24 @@ or
 
 Returns 0 when user and test was found. 1 is returned otherwise
 
+
+### To log the results and send them via email
+
+####PRE-Requirements:
+
+*mailx* is installed on the system
+
+*testfw.conf* is configured
+
+*run_test_with_mail.sh* has execute bit set (chmod +x)
+
+#### RUNNING
+
+''./run_test_with_mail.sh USERNAME TESTNAME''
+
+This will run ./testfw with both parameters, log results to file named "run_log_USERNAME_DATE" in the same folder and sends the log to USERNAME (also in case of error) using variables for server and server defined in *testfw.conf*.
+
+
 ## Approach
 This testing framework is written with C using glib, glib-json and curl libraries. The basic idea is to use the REST API defined in preferences.json for testing with the given testcases. Contains basic CLI UI and possibility to do a single run with username and testname searched from tests/username/preferences.json.
 
@@ -94,7 +112,9 @@ Other minor challenges included the C coding in general, there might still be so
 
 I had in mind to build a server-client architecture for this framework using SCTP for communication and it will remain a question whether I have time to implement that. This would include listing existing tests, adding new with file upload. The new test would be added to preferences.json and files stored on server for future use. 
 
-The server-client would also enable using of timed tests with logging information sent to the email of the user. Timing of tasks would be easily done in Linux-environment on server side using cron. An entry would be added to cron to run a script, which would send a tailored system signal to the running server process to do a test of the user who requested timing of test. It would include sending the username and testname from the script. Sending of email could be done with curl, for instance, so no new libraries have to be included. The email would include either detailed information of the test or just a summary of potential errors. Or if the server is not running there could be 
+The server-client would also enable using of timed tests with logging information sent to the email of the user. Timing of tasks would be easily done in Linux-environment on server side using cron. An entry would be added to cron to run a script, which would send a tailored system signal to the running server process to do a test of the user who requested timing of test. It would include sending the username and testname from the script. Sending of email could be done with curl, for instance, so no new libraries have to be included. The email would include either detailed information of the test or just a summary of potential errors. 
+
+Or if the server is not running a single instance could be executed as it is shown earlier how to do a single run with cli parameters. This would require that a proper logging system is implemented that, depending on how the framework is run, prints log to screen and to log-file or only to log-file. **[UPDATE]**: Added a script that should be run with username (email address) and testname of that user, which saves the result of the test to a log file named "run_log_(username)_(date)" in the same folder and sends the result to username (email) if SMTP_SRV and SENDER_ADDRESS are set using *mailx* binary.
 
 ## Compromises made
 
