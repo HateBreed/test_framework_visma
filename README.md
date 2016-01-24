@@ -19,13 +19,25 @@ A testing framework made for Visma Solutions Oy as a pre-interview task
  * debug: make debug
 
 ## Running
+
+### To get CLI UI
 ./testfw -u (username)
-or with default username
+
+or with default username:
+
 make run
 
+or
+
+./testfw
+
+### To do a single run as specific user and test
+./testfw -u (username) -t (testname)
+
+Returns 0 when user and test was found. 1 is returned otherwise
 
 ## Approach
-This testing framework is written with C using glib, glib-json and curl libraries. The basic idea is to use the REST API defined in preferences.json for testing with the given testcases.
+This testing framework is written with C using glib, glib-json and curl libraries. The basic idea is to use the REST API defined in preferences.json for testing with the given testcases. Contains basic CLI UI and possibility to do a single run with username and testname searched from tests/username/preferences.json.
 
 This framework is highly configurable. Multiple different json test files are supported. A main file contains the generic test details, such as REST API URL and the files to be used as testing or adding new data. Each file has multiple parameters to configure from REST API path to HTTP method. Each of the testfiles or added data jsons can have two extra types for member field values ({parent} and {getinfo}). If a member field has either of this value it has to include also a configuration json for this member field (see Structure of testcase files). This configuration tells from which file response the value is to be retrived with a specific member field name. Also, any field containing integers can be configured and they are treated as double type.
 
@@ -96,7 +108,7 @@ There are memory leaks. Some might be because of agile coding and hurry, others 
 
 Error checking is lacking in many cases. Again, a symptom caused by agile coding and hurry.
 
-User interface is buggy.
+<del>User interface is buggy.</del>
 
 Reading of the required fields ({parent}) and fields requiring more info ({getinfo}) is not efficient. This must be integrated into loading process of the JSON and not to do separately.
 
