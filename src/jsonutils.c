@@ -325,6 +325,9 @@ gboolean set_value_of_member(jsonreply* jsondata, const gchar* member, const gch
 gboolean set_values_of_all_members(jsonreply* jsondata, GHashTable* replace) {
 	if(!jsondata || !replace) return FALSE;
 	
+	// List empty
+	if(g_hash_table_size(replace) == 0) return TRUE;
+	
 	gboolean rval = TRUE;
 	gint replaced = 0;
 	
@@ -733,6 +736,9 @@ gboolean add_required_member_value_to_list(GHashTable* filetable, testfile* tfil
 
 	if(!filetable || !tfile) return FALSE;
 	
+	// List empty
+	if(!tfile->required) return TRUE;
+	
 	gboolean rval = TRUE;
 	gchar *search_file = NULL;	
 	gchar *search_member = NULL;
@@ -874,8 +880,12 @@ gboolean replace_getinfo_member(testfile* tfile, gint index, const gchar* url) {
 gboolean add_getinfo_member_value_to_list(testfile* tfile, gint index, const gchar* url) {
 
 	if(!tfile  || !url) return FALSE;
+
+	// List empty
+	if(!tfile->moreinfo) return TRUE;
 	
 	gboolean rval = TRUE;
+	
 	// Get member to be replaced
 	const gchar* member = (gchar*)g_slist_nth_data(tfile->moreinfo,index);
 	

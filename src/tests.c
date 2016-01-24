@@ -3,6 +3,21 @@
 
 static GSList *test_sequence = NULL;
 
+/** 
+* Check if given method for file sending is sending data
+* i.e. is either POST or PUT.
+*
+* @param method Method to check
+*
+* @return TRUE if it is matching POST or PUT, FALSE otherwise (also when method is NULL)
+*/
+gboolean tests_file_sending_method(gchar* method) {
+	if(!method) return FALSE;
+	if((g_strcmp0(method,"POST") == 0) || 
+		(g_strcmp0(method,"PUT") == 0)) return TRUE;
+	else return FALSE;
+}
+
 /**
  * Placeholder for initialization
  */
@@ -97,7 +112,7 @@ gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
 			if(!load_json_from_file(parser, filepath)) return FALSE;
 			
 			// Do this only for files that are sent
-			if((g_strcmp0(tfile->method,"POST") == 0) || (g_strcmp0(tfile->method,"PUT") == 0))
+			if(tests_file_sending_method(tfile->method))
 				tests_check_fields_from_loaded_testfile(parser, tfile, testpath);
 		
 			// Establish a generator to get the character representation
@@ -176,7 +191,7 @@ gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
 			// Go through all fields having {parent} as value
 			
 			// Do this only for files that are sent
-			if((g_strcmp0(tfile->method,"POST") == 0) || (g_strcmp0(tfile->method,"PUT") == 0)) {
+			if(tests_file_sending_method(tfile->method)) {
 				for(index = 0; index < g_slist_length(tfile->required); index++) {
 					//replace_required_member(test->files,tfile,index);
 				
