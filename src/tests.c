@@ -96,7 +96,9 @@ gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
 			// Read json detailed by this data (stucture)
 			if(!load_json_from_file(parser, filepath)) return FALSE;
 			
-			tests_check_fields_from_loaded_testfile(parser, tfile, testpath);
+			// Do this only for files that are sent
+			if((g_strcmp0(tfile->method,"POST") == 0) || (g_strcmp0(tfile->method,"PUT") == 0))
+				tests_check_fields_from_loaded_testfile(parser, tfile, testpath);
 		
 			// Establish a generator to get the character representation
 			JsonGenerator *generator = json_generator_new();
@@ -172,24 +174,28 @@ gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
 		else {
 			gint index = 0;
 			// Go through all fields having {parent} as value
-			for(index = 0; index < g_slist_length(tfile->required); index++) {
-				//replace_required_member(test->files,tfile,index);
-				
-				// Use new function just to add member-new value pairs to hash table
-				add_required_member_value_to_list(test->files,tfile,index);
-			}
 			
-			// Go through the list of items requiring more info
-			for(gint index = 0; index < g_slist_length(tfile->moreinfo); index++) {
-				//replace_getinfo_member(tfile,index,test->URL);
+			// Do this only for files that are sent
+			if((g_strcmp0(tfile->method,"POST") == 0) || (g_strcmp0(tfile->method,"PUT") == 0)) {
+				for(index = 0; index < g_slist_length(tfile->required); index++) {
+					//replace_required_member(test->files,tfile,index);
 				
-				// Use new function just to add member-new value pairs to hash table
-				add_getinfo_member_value_to_list(tfile,index,test->URL);
-			}
+					// Use new function just to add member-new value pairs to hash table
+					add_required_member_value_to_list(test->files,tfile,index);
+				}
 			
-			// Replace all values in the jsonreply_t data using the member-value
-			// pairs in the replace hash table
-			set_values_of_all_members(tfile->send, tfile->replace);
+				// Go through the list of items requiring more info
+				for(gint index = 0; index < g_slist_length(tfile->moreinfo); index++) {
+					//replace_getinfo_member(tfile,index,test->URL);
+				
+					// Use new function just to add member-new value pairs to hash table
+					add_getinfo_member_value_to_list(tfile,index,test->URL);
+				}
+				
+				// Replace all values in the jsonreply_t data using the member-value
+				// pairs in the replace hash table
+				set_values_of_all_members(tfile->send, tfile->replace);		
+			}
 
 			tfile->recv = http_post(url,tfile->send,tfile->method);
 			

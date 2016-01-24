@@ -582,6 +582,10 @@ gboolean verify_server_response(jsonreply* request, jsonreply* response) {
 					json_reader_end_element(req_reader);
 				}
 			}
+			else {
+				g_print("Member field \"data\" is not an array as expected. Cannot verify.\n");
+				test_ok = FALSE;
+			}
 			
 			// Close member (array)
 			json_reader_end_member(req_reader);
