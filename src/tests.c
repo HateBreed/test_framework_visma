@@ -39,7 +39,8 @@ gboolean tests_run_test(gchar* username, testcase* test) {
 	gchar* testpath = tests_make_path_for_test(username,test);
 
 	// Check which fields from the case creation reply have to be stored for future use
-	g_hash_table_foreach(test->files, (GHFunc)tests_check_fields_from_testfiles, testpath);
+	// This is done after loading the testfile in test_conduct_tests() to save resources
+	//g_hash_table_foreach(test->files, (GHFunc)tests_check_fields_from_testfiles, testpath);
 	
 	// Create the sequence of sending tests (json files as charstring data)
 	tests_build_test_sequence(test);
@@ -93,7 +94,9 @@ gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
 			JsonParser *parser = json_parser_new();
 		
 			// Read json detailed by this data (stucture)
-			if(!load_json_from_file(parser, filepath)) return FALSE;	
+			if(!load_json_from_file(parser, filepath)) return FALSE;
+			
+			tests_check_fields_from_loaded_testfile(parser, tfile, testpath);
 		
 			// Establish a generator to get the character representation
 			JsonGenerator *generator = json_generator_new();
@@ -398,6 +401,96 @@ void tests_check_fields_from_testfiles(gpointer key, gpointer value, gpointer te
 	g_object_unref(parser);
 	parser = NULL;
 	g_free(filepath);
+}
+
+/**
+* Checks the fields from the file loaded in parser for presence of {parent} and
+* {getinfo} values. These member names containing such values are added to the
+* lists of the test files to be replaced later. 
+* 
+* @param parser - Parser where file is loaded
+* @param tfile - testfile containing details
+* @param testpath - Base path to tests
+*/
+void tests_check_fields_from_loaded_testfile(JsonParser *parser,testfile *tfile, gchar* testpath) {
+		
+	gchar* filepath = g_strjoin("/",testpath,tfile->file,NULL);
+	JsonReader *reader = json_reader_new (json_parser_get_root (parser));
+
+	gchar** members = json_reader_list_members(reader);
+	
+	// Go through all members of this json
+	for(gint membidx = 0; members[membidx] != NULL; membidx++) {
+
+		// Get the value of current member
+		gchar* membstring = get_json_member_string(reader,members[membidx]);
+		
+		// Requires information from other file
+		if(g_strcmp0(membstring,"{parent}") == 0) {
+		
+			// Add member name to list
+			tfile->required = g_slist_append(tfile->required,g_strdup(members[membidx]));
+			
+			JsonParser *par_parser = json_parser_new();
+			
+			// Create file offering more information
+			gchar* par_infopath = g_strjoin(".",filepath,"info",members[membidx],"json",NULL);
+			
+			if(load_json_from_file(par_parser,par_infopath)) {
+				JsonGenerator *par_generator = json_generator_new();
+				json_generator_set_root(par_generator, json_parser_get_root(par_parser));
+				
+				// Initialize struct for the new json and store json
+				jsonreply* info = jsonreply_initialize();
+				info->data = json_generator_to_data(par_generator,&(info->length));
+				
+				// To verify that this item is in correct position in the list 
+				// and corresponds to the member string location
+				gint add_position = g_slist_length(tfile->required) - 1;
+				tfile->reqinfo = g_slist_insert(tfile->reqinfo,info,add_position);
+
+				g_object_unref(par_generator);
+			}
+			g_free(par_infopath);
+			g_object_unref(par_parser);
+		}
+		
+		// Requires more information from the server
+		if(g_strcmp0(membstring,"{getinfo}") == 0) {
+		
+			// Add member name to list
+			tfile->moreinfo = g_slist_append(tfile->moreinfo,g_strdup(members[membidx]));
+			
+			JsonParser *info_parser = json_parser_new();
+			
+			// Create path to the file offering more information
+			gchar* infopath = g_strjoin(".",filepath,"getinfo",members[membidx],"json",NULL);
+			
+			// Load the json file
+			if(load_json_from_file(info_parser,infopath)) {
+				JsonGenerator *info_generator = json_generator_new();
+				json_generator_set_root(info_generator, json_parser_get_root(info_parser));
+				
+				// Initialize struct for the new json and store json
+				jsonreply* info = jsonreply_initialize();
+				info->data = json_generator_to_data(info_generator,&(info->length));
+				
+				// To verify that this item is in correct position in the list 
+				// and corresponds to the member string location
+				gint add_position = g_slist_length(tfile->moreinfo) - 1;
+				tfile->infosend = g_slist_insert(tfile->infosend,info,add_position);
+
+				g_object_unref(info_generator);
+			}
+			g_free(infopath);
+			g_object_unref(info_parser);
+		}
+		g_free(membstring);
+	}
+		
+	g_strfreev(members);
+	g_free(filepath);
+	g_object_unref(reader);
 }
 
 /**
