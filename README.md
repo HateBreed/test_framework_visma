@@ -59,6 +59,8 @@ This testing framework is written with C using glib, glib-json and curl librarie
 
 This framework is highly configurable. Multiple different json test files are supported. A main file contains the generic test details, such as REST API URL and the files to be used as testing or adding new data. Each file has multiple parameters to configure from REST API path to HTTP method. Each of the testfiles or added data jsons can have two extra types for member field values ({parent} and {getinfo}). If a member field has either of this value it has to include also a configuration json for this member field (see Structure of testcase files). This configuration tells from which file response the value is to be retrived with a specific member field name. Also, any field containing integers can be configured and they are treated as double type.
 
+Binary was created to support also a standalone run on Linux and with a script (run_test_with_mail.sh) enables logging of the results using username and current time for log file name and then the result file can be sent via email to user (as username = email) if correct binary (mailx) is installed and settings are configured (testfw.conf).
+
 ### Order of things 
 
 First the logged in user is used as a path to open the preferences.json in folder "tests/<username>". File preferences.json details all the tests of this user which are listed to cli ui. From this ui the user can select which test to conduct. At this point the separate test files are not loaded. 
