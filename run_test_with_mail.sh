@@ -27,14 +27,14 @@ if [ $# -eq 2 ] ; then
 
 	if $(./testfw -u $1 -t $2 1>run_log_$1_$DATE) ; then
 		if [ $(which mailx) ] && [ $SEND_EMAIL = "yes" ] ; then
-			mailx -S smtp=$SMTP_SRV -r $SENDER_ADDRESS -s $TESTSUBJECT -v $1 < $LOGFILE
+			mailx -S smtp="$SMTP_SRV" -r "$SENDER_ADDRESS" -s "$TESTSUBJECT" -v "$1" < $LOGFILE
 		else
 			echo "No mailx binary found or configuration is lacking parameters. Tests are not sent, see $LOGFILE"
 		fi
 	else
 		ERROR="$TESTSUBJECT [FAILED - NO SUCH TEST OR USER]"
 		if [ $(which mailx) ] && [ $SEND_EMAIL = "no" ] ; then
-			mailx -S smtp=$SMTP_SRV -r $SENDER_ADDRESS -s $ERROR -v $1 < $LOGFILE
+			mailx -S smtp="$SMTP_SRV" -r "$SENDER_ADDRESS" -s "$ERROR" -v "$1" < $LOGFILE
 		else
 			echo "No mailx binary found or configuration is lacking parameters. Test running was not successful, see $LOGFILE"
 		fi
