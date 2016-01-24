@@ -110,6 +110,6 @@ Error checking is lacking in many cases. Again, a symptom caused by agile coding
 
 <del>User interface is buggy.</del>
 
-Reading of the required fields ({parent}) and fields requiring more info ({getinfo}) is not efficient. This must be integrated into loading process of the JSON and not to do separately.
+<del>Reading of the required fields ({parent}) and fields requiring more info ({getinfo}) is not efficient. This must be integrated into loading process of the JSON and not to do separately.</del> This was implemented.
 
-Replacing of JSON member field values is not efficient, it does the replacing one at a time and then rewrites the json by changing only one value. This must be changed to one JSON write function that accepts a GHashTable of member field names as keys and their new values so all can be replaced in one run.
+<del>Replacing of JSON member field values is not efficient, it does the replacing one at a time and then rewrites the json by changing only one value. This must be changed to one JSON write function that accepts a GHashTable of member field names as keys and their new values so all can be replaced in one run.</del> This was implemented.
