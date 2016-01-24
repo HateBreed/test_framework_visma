@@ -29,7 +29,7 @@ void tests_initialize(testcase* test) {
 /**
 * Clear the test environment. Currently; clear test sequence
 */
-void tests_destroy(testcase* test) {
+void tests_reset(testcase* test) {
 	g_slist_free_full(test_sequence,(GDestroyNotify)free_key);
 	test_sequence = NULL;
 	

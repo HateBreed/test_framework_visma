@@ -7,7 +7,7 @@
 #include "utils.h"
 
 void tests_initialize(testcase* test);
-void tests_destroy(testcase* test);
+void tests_reset(testcase* test);
 
 gboolean tests_run_test(gchar* username, testcase* test);
 
