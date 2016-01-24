@@ -81,6 +81,24 @@ Next after selecting the test it will be run. Following sequence is used:
 
 For each user a seprate folder with the users full name (e.g. john.doe@severa.com) has to be created, this must contain a preferences file such as [preferences.json](https://github.com/HateBreed/test_framework_visma/blob/master/tests/john.doe%40severa.com/preferences.json). In this file each test belongin to the user are listed under "tests" containg test name, url, server encoding, array containing fields that are numerical and array of files. 
 
+Current folder structure is:
+ - tests/
+ 	- username1/
+ 		- preferences.json
+ 		- testname1/
+ 			- login.json
+ 			- test1.json
+ 			- test2.json
+ 		- testname2/
+ 			- login.json
+ 			- Test.json
+ 	- username2
+ 		- preferences.json
+ 		- testX
+ 			- login.json
+ 			- X.json
+
+
 In preferences.json:
 * name - testname
 * URL - REST API URL
@@ -100,7 +118,7 @@ Each json file that is going to be sent can contain any data but anything define
    * root_task - "yes" or "no", if "yes" then the root_task entry within a json object will be used to get the value withheld by "search_member"
    * search_member - Name of the member field to be searched within "search_file". Value of this member field is assigned to the member field to which this file is connected to
    * search_file - Id (in preferences.json) of the file which contains the "search_member"
- * {getinfo} - Defines that more information is required from server. The file named as <this.json>.getinfo.<membername>.json (e.g., Expense.json.getinfo.product_guid.json) details from which path and with what method more information regarding this member is to be retrieved from REST API. The fields that the file must contain are:
+ * {getinfo} - Defines that more information is required from server. The file named as <this.json>.getinfo.<membername>.json (e.g., [Expense.json.getinfo.product_guid.json](https://github.com/HateBreed/test_framework_visma/blob/master/tests/john.doe%40severa.com/test1/Expense.json.getinfo.product_guid.json) details from which path and with what method more information regarding this member is to be retrieved from REST API. The fields that the file must contain are:
    * path - the path to be added to testcase REST API url
    * method - HTTP method to use for accessing REST API url 
  
@@ -119,6 +137,8 @@ I had in mind to build a server-client architecture for this framework using SCT
 The server-client would also enable using of timed tests with logging information sent to the email of the user. Timing of tasks would be easily done in Linux-environment on server side using cron. An entry would be added to cron to run a script, which would send a tailored system signal to the running server process to do a test of the user who requested timing of test. It would include sending the username and testname from the script. Sending of email could be done with curl, for instance, so no new libraries have to be included. The email would include either detailed information of the test or just a summary of potential errors. 
 
 Or if the server is not running a single instance could be executed as it is shown earlier how to do a single run with cli parameters. This would require that a proper logging system is implemented that, depending on how the framework is run, prints log to screen and to log-file or only to log-file. **[UPDATE]**: Added a script that should be run with username (email address) and testname of that user, which saves the result of the test to a log file named "run_log_(username)_(date)" in the same folder and sends the result to username (email) if SMTP_SRV and SENDER_ADDRESS are set using *mailx* binary.
+
+Last, there should be a way to add the tests instead of creating the folder structure manually. Now the only way is to create/manipulate preferences.json manually and add tests there, then to create test folder and move tests into that folder. 
 
 ## Compromises made
 
