@@ -169,6 +169,8 @@ void testcase_reset_file(gpointer key, gpointer data, gpointer user) {
 	g_slist_free_full(tfile->required,(GDestroyNotify)free_key);
 	g_slist_free_full(tfile->moreinfo,(GDestroyNotify)free_key);
 	
+	g_hash_table_remove_all(tfile->replace);
+	
 	g_slist_free_full(tfile->reqinfo,(GDestroyNotify)free_jsonreply);
 	g_slist_free_full(tfile->infosend,(GDestroyNotify)free_jsonreply);
 	g_slist_free_full(tfile->inforecv,(GDestroyNotify)free_jsonreply);
@@ -205,6 +207,12 @@ testfile* testfile_initialize(const gchar* tid, const gchar* jsonfile, const gch
 	
 	tfile->send = NULL;
 	tfile->recv = NULL;
+	
+	tfile->replace = g_hash_table_new_full(
+		(GHashFunc)g_str_hash,
+		(GEqualFunc)g_str_equal,
+		(GDestroyNotify)free_key,
+		(GDestroyNotify)free_key);
 	
 	tfile->required = NULL;
 	tfile->reqinfo = NULL;
@@ -323,6 +331,8 @@ void free_testfile(gpointer data) {
 
 	free_jsonreply(tfile->send);
 	free_jsonreply(tfile->recv);
+	
+	g_hash_table_destroy(tfile->replace);
 
 	g_slist_free_full(tfile->required,(GDestroyNotify)free_key);
 	g_slist_free_full(tfile->moreinfo,(GDestroyNotify)free_key);

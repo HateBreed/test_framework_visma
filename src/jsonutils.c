@@ -312,6 +312,87 @@ gboolean set_value_of_member(jsonreply* jsondata, const gchar* member, const gch
 	return rval;
 }
 
+/** 
+* Replace all values in json if corresponding member value is found from the
+* given hash table. Creates a new json from the given jsonreply_t
+* while replacing all value in the json data.
+*
+* @param jsondata Pointer to structure containing json
+* @param replace Hash table containing member-value pairs (members as keys)
+*
+* @return TRUE when data could be loaded and all values were replaced
+*/
+gboolean set_values_of_all_members(jsonreply* jsondata, GHashTable* replace) {
+	if(!jsondata || !replace) return FALSE;
+	
+	gboolean rval = TRUE;
+	gint replaced = 0;
+	
+	JsonParser *parser = json_parser_new();
+	
+	// Load existing data
+	if(load_json_from_data(parser,jsondata->data,jsondata->length)) {
+	
+		// Initialize a new builder to construct new json with
+		// a new value for a member
+		JsonBuilder *builder = json_builder_new();
+		json_builder_begin_object(builder);
+		
+		// Start reading json and get list of members
+		JsonReader *reader = json_reader_new (json_parser_get_root (parser));
+		gchar** members = json_reader_list_members(reader);
+		
+		// Go through members
+		for(gint membidx = 0; members[membidx] != NULL; membidx++) {
+		
+			// Get member and set it as current member name in new json
+			gchar* membstring = get_json_member_string(reader,members[membidx]);
+			json_builder_set_member_name(builder,members[membidx]);
+			
+			// Find value from hash table
+			gchar* new_value = (gchar*)g_hash_table_find(replace,
+				(GHRFunc)find_from_hash_table, 
+				members[membidx]);
+			
+			// If value for this member is found in replace hash table
+			// use new value instead of existing one
+			if(new_value) {
+				json_builder_add_string_value(builder, new_value);
+				replaced++;
+			}
+			else json_builder_add_string_value(builder, membstring);
+			
+			g_free(membstring);
+		}
+		// End building
+		json_builder_end_object(builder);
+		g_object_unref(reader);
+
+		// Generate new json from the built data
+		JsonGenerator *generator = json_generator_new();
+		json_generator_set_root(generator, json_builder_get_root(builder));
+		
+		// Free previous data and assign new to this json
+		g_free(jsondata->data);
+		jsondata->data = json_generator_to_data(generator,&(jsondata->length));
+		
+		g_strfreev(members);
+		g_object_unref(generator);
+		
+		g_object_unref(builder);
+	}
+	else rval = FALSE;
+	
+	g_object_unref(parser);
+	
+	// All were not replaced
+	if(replaced != g_hash_table_size(replace)) {
+		g_print("Replaced %d values but hash table contains: %d values. Errors may exist in tests\n",replaced,g_hash_table_size(replace));
+		rval = FALSE;
+	}
+	return rval;
+}
+
 /**
 * Create a JSON delete reply containing only one given member with given value
 *
@@ -628,6 +709,80 @@ gboolean replace_required_member(GHashTable* filetable, testfile* tfile, gint in
 	return rval;
 }
 
+
+/**
+* Add value of a required member in the testfile replace hash table.
+* Gets the member name and corresponding jsonreply_t from which the 
+* three member field values are read: (search_file, search_member 
+* and root_Task). These fields tell from which file response, which
+* member and whether sub-element is required to be used.
+*
+* Calls get_value_of_member() to get values from JSON.
+*
+* @param filetable GHashTable of testfile_t structs from which the file is searched
+* @param tfile Current testfile_t containing the member to be replaced
+* @param index Position of member name and JSON at testfile_t structures
+*
+* @return TRUE when value was added to hash table (or replaced a value of existing)
+*/
+gboolean add_required_member_value_to_list(GHashTable* filetable, testfile* tfile, gint index) {
+
+	if(!filetable || !tfile) return FALSE;
+	
+	gboolean rval = TRUE;
+	gchar *search_file = NULL;	
+	gchar *search_member = NULL;
+	gchar *search_root = NULL;
+	gboolean root_task = FALSE;
+	
+	// Get member to be replaced
+	const gchar* member = (gchar*)g_slist_nth_data(tfile->required,index);
+	
+	// Get the json holding the details for this parameter
+	jsonreply* info = (jsonreply*)g_slist_nth_data(tfile->reqinfo,index);
+	
+	// Found json
+	if(info) {
+#ifdef G_MESSAGES_DEBUG
+		g_print("member %s info: %s\n",member,info->data);
+#endif
+		
+		// Get path and method from file
+		search_file = get_value_of_member(info,"search_file",NULL);
+		search_member = get_value_of_member(info,"search_member",NULL);
+		search_root = get_value_of_member(info,"root_task",NULL);
+		if(search_root && g_strcmp0(search_root,"yes") == 0) root_task = TRUE;
+		
+		// Get the file
+		testfile* req_file = (testfile*)g_hash_table_find(filetable,
+			(GHRFunc)find_from_hash_table, 
+			search_file);
+
+		// Something to search for?
+		if(search_member) {
+			gchar* new_value = get_value_of_member(
+				req_file->recv,
+				search_member,
+				root_task ? "root_task" : NULL);
+	
+			// Create new json using the "value" and save it
+			if(new_value) {
+				g_hash_table_insert(tfile->replace,g_strdup(member),g_strdup(new_value));
+				rval = TRUE;
+			}
+		g_free(new_value);
+		}
+	}
+	else rval = FALSE;
+	
+	
+	g_free(search_file);
+	g_free(search_root);
+	g_free(search_member);
+	
+	return rval;
+}
+
 /**
 * Replace value of a member requiring more information from the server.
 * The JSON having the details is read at index of tfile structures and
@@ -677,6 +832,70 @@ gboolean replace_getinfo_member(testfile* tfile, gint index, const gchar* url) {
 #ifdef G_MESSAGES_DEBUG
 				g_print("Replaced member %s value to %s\n",member,value);
 #endif
+			rval = TRUE;
+		}
+		
+		// Add result to list
+		tfile->inforecv = g_slist_append(tfile->inforecv,inforecv);
+		
+		g_free(infopath);
+		g_free(method);
+		g_free(infourl);
+		g_free(value);
+	}
+	else rval = FALSE;
+	return rval;
+}
+
+
+/**
+* Add a value of a member requiring more information from the server
+* to the testfile replace hash table. The JSON having the details is
+* read at index of tfile structures and an request is sent to url+"path"
+* field in the JSON using "method". The reply to this response contains
+* a member field matching one at index in the list of getinfo-member
+* fields in tfile. This new member-value pair is added to the testfile
+* replace hash table where member is the key.
+*
+* Calls get_value_of_member() to read the pfererences from getinfo JSON.
+* Calls http_post() to send the request (most likely GET).
+* Calls get_value_of_member() to get the value from the server response.
+*
+* @param tfile Current testfile_t containing the member to be replaced
+* @param index Position of member name and JSON at testfile_t structures
+* @param url Base url to which request is sent
+*
+* @return TRUE when value was found in reply and added to/replaced in hash table
+*/
+gboolean add_getinfo_member_value_to_list(testfile* tfile, gint index, const gchar* url) {
+
+	if(!tfile  || !url) return FALSE;
+	
+	gboolean rval = TRUE;
+	// Get member to be replaced
+	const gchar* member = (gchar*)g_slist_nth_data(tfile->moreinfo,index);
+	
+	// Get the json holding the details for this parameter
+	jsonreply* infosend = (jsonreply*)g_slist_nth_data(tfile->infosend,index);
+	jsonreply* inforecv = NULL;
+	
+	// Found json
+	if(infosend) {
+	
+		// Get path and method from file
+		gchar* infopath = get_value_of_member(infosend,"path",NULL);
+		gchar* method = get_value_of_member(infosend,"method",NULL);
+		
+		// Construct url
+		gchar* infourl = g_strjoin("/",url,infopath,NULL);
+						
+		// Send an empty json to server to retrieve information
+		inforecv = http_post(infourl,NULL,method);
+		
+		// Search the value and replace it
+		gchar* value = get_value_of_member(inforecv,"guid",NULL);
+		if(value) {
+			g_hash_table_insert(tfile->replace,g_strdup(member),g_strdup(value));
 			rval = TRUE;
 		}
 		

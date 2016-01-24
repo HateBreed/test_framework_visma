@@ -170,13 +170,23 @@ gboolean tests_conduct_tests(testcase* test, gchar* testpath) {
 			gint index = 0;
 			// Go through all fields having {parent} as value
 			for(index = 0; index < g_slist_length(tfile->required); index++) {
-				replace_required_member(test->files,tfile,index);
+				//replace_required_member(test->files,tfile,index);
+				
+				// Use new function just to add member-new value pairs to hash table
+				add_required_member_value_to_list(test->files,tfile,index);
 			}
 			
 			// Go through the list of items requiring more info
 			for(gint index = 0; index < g_slist_length(tfile->moreinfo); index++) {
-				replace_getinfo_member(tfile,index,test->URL);
+				//replace_getinfo_member(tfile,index,test->URL);
+				
+				// Use new function just to add member-new value pairs to hash table
+				add_getinfo_member_value_to_list(tfile,index,test->URL);
 			}
+			
+			// Replace all values in the jsonreply_t data using the member-value
+			// pairs in the replace hash table
+			set_values_of_all_members(tfile->send, tfile->replace);
 
 			tfile->recv = http_post(url,tfile->send,tfile->method);
 			

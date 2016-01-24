@@ -40,6 +40,7 @@ typedef struct testfile_t {
 	jsonreply *recv; // Reply sent by the server as json string
 	GSList *required; // List of required members from id 0 (case creation)
 	GSList *reqinfo; // List of jsons telling more information about where to get value for {parent}
+	GHashTable *replace; // Hash table of members to have new value
 	GSList *moreinfo; // List of fields that require more information
 	GSList *infosend; // List of jsons that are to be used to get more info
 	GSList *inforecv; // List of json replies sent by the server
